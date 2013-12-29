@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="Download imgur albums in their entirety. This ripper will grab the highest-quality versions of the images and retain the sort order. Works within the browser -- no download required.">
+		<meta name="author" content="4_pr0n">
+		<link rel="shortcut icon" href="ui/content/favicon.png">
+
+		<title>rip.rarchives</title>
+
+		<link href="./ui/css/bootstrap.css" rel="stylesheet">
+		<link href="./ui/css/custom.css" rel="stylesheet">
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">rip.rarchives</a>
+				</div>
+				<div class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#rip" id="nav-rip"><span class="glyphicon glyphicon-cloud-download"></span> rip &amp; zip</a></li>
+						<li><a href="#albums" id="nav-albums"><span class="glyphicon glyphicon-picture"></span> albums</a></li>
+						<li><a href="#video" id="nav-video"><span class="glyphicon glyphicon-film"></span> video</a></li>
+						<li><a href="#stats" id="nav-stats"><span class="glyphicon glyphicon-stats"></span> stats</a></li>
+
+						<!-- ABOUT -->
+						<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" id="nav-about">
+							<span class="glyphicon glyphicon-info-sign"></span> about
+							<b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li><a href="#about=site" id="view-about-site"><i class="icon-list-alt"></i> about this site</a></li>
+							<li><a href="#about=terms" id="view-about-mods"><i class="icon-list-alt"></i> terms of service</a></li>
+							<li class="divider"></li>
+							<li><a href="#about=removal" id="view-about-mods"><i class="icon-list-alt"></i> content removal</a></li>
+							<li class="divider"></li>
+							<li><a href="#about=code" id="view-about-code"><i class="icon-list-alt"></i> open-source</a></li>
+						</ul>
+					</ul>
+
+				</div> <!-- /.nav-collapse -->
+			</div> <!-- /.container -->
+		</div> <!-- /.navbar -->
+
+		<!-- Main jumbotron for a primary marketing message or call to action -->
+		<div id="page-rip">
+			<div class="jumbotron">
+				<div class="container text-center">
+					<h1 class="title">album ripper</h1>
+					<p class="text-center"> view and download albums hosted on various websites
+					<div class="input-group input-group-md">
+						<span class="input-group-btn">
+							<button id="button-rip-album" class="btn btn-default" type="button">
+								<span class="glyphicon glyphicon-cloud-download"></span>
+								rip &amp; zip
+							</button>
+						</span>
+						<input type="text" id="text-rip-album" class="form-control" placeholder="http://imgur.com/a/RDxNa" autocomplete="off" value="">
+					</div> <!-- /input-group -->
+				</div> <!-- /container -->
+			</div> <!-- /jumbotron -->
+
+			<div class="container well">
+					<h2>supported sites</h2>
+					<div class="container text-center" id="supported-album">
+						<a class="col-xs-6 col-sm-3 col-md-2">imgur</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">tumblr</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">twitter</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">deviantart</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">flickr</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">seenive</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">imagebam</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">imagefap</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">imagearn</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">instagram</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">xhamster</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">getgonewild</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">anonib</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">minus</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">4chan</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">nfsfw</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">cghub</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">chansluts</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">teenplanet</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">imgbox</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">butttoucher</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">reddit</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">fuskator</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">fapdu</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">kodiefiles</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">redditsluts</a>
+						<a class="col-xs-6 col-sm-3 col-md-2">gallerydump</a>
+					</div>
+			</div> <!-- /container -->
+		</div> <!-- /#page-rip -->
+
+		<div id="page-albums" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-albums -->
+
+		<div id="page-stats" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-stats -->
+
+		<div id="page-about-site" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-about-site -->
+
+		<div id="page-about-tos" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-about-tos -->
+
+
+		<div id="page-about-removals" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-about-removals -->
+
+
+		<div id="page-about-code" class="container" style="display: none">
+			<div class="container">
+				
+			</div>
+		</div> <!-- /#page-about-code -->
+
+		<div class="container">
+			<footer>
+			<p>&copy; rarchives 2013</p>
+			</footer>
+		</div>
+
+		<script src="./ui/js/jquery-2.0.3.min.js"></script>
+		<script src="./ui/js/bootstrap.min.js"></script>
+		<script src="./ui/js/main.js"></script>
+
+	</body>
+</html>
+
