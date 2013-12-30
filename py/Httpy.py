@@ -174,7 +174,7 @@ if __name__ == '__main__':
 	httpy.log('get:    %s' % url)
 	httpy.log('length: %d' % len(r))
 	httpy.log('blurb:  %s' % r[0:50].replace('\n', ''))
-	r = httpy.post('http://requestb.in/xssxqyxs', {'key1' : 'value1'})
-	httpy.log('post:   %s' % url)
-	httpy.log('result: %s' % r)
+	#r = httpy.post('http://requestb.in/xssxqyxs', {'key1' : 'value1'})
+	#httpy.log('post:   %s' % url)
+	#httpy.log('result: %s' % r)
 

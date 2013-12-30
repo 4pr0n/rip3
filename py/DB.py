@@ -38,46 +38,49 @@ SCHEMA = {
 		'count      integer,' +
 		'zip        text,' +
 		'views      integer,' +
-		'metadata   text',
+		'metadata   text,' +
+		'author     text,' +
+		'reports    integer',
 
 	'medias' :
-		'albumid    integer,' +
+		'album_id   integer,' +
 		'i_index    integer,' +
 		'url        text,' +
-		'downloaded integer,' +
-		'saveas     text,' +
+		'valid      integer,' +
+		'error      text,' +
 		'type       text,' +
-		'path       text,' +
+		'image_name text,' +
 		'width      integer,' +
 		'height     integer,' +
 		'filesize   integer,' +
-		'thumb      text,' +
+		'thumb_name text,' +
 		't_width    integer,' +
 		't_height   integer,' +
 		'metadata   text,' +
-		'foreign key(albumid) references albums(rowid),' +
-		'primary key(albumid, i_index)',
+		'foreign key(album_id) references albums(rowid),' +
+		'primary key(album_id, i_index)',
 
 	'urls' :
-		'albumid  integer,' +
+		'album_id  integer,' +
 		'i_index  integer,' +
 		'url      text,' +
 		'saveas   text,' +
 		'type     text,' +
 		'metadata text,' +
 		'added    integer',
-	
-	'metadata' :
-		'albumid integer,' +
-		'key     text,' +
-		'value   text,' +
-		'foreign key(albumid) references albums(rowid),' +
-		'primary key(albumid, key)',
 
 	'sites' :
 		'host      text primary key,' +
 		'available integer,' +
-		'message   text',
+		'message   text,' +
+		'checked   integer',
+
+	'reports' :
+		'album_id integer,' +
+		'user     text,' +
+		'message  text,' +
+		'foreign key(album_id) references albums(rowid),' +
+		'primary key(album_id, user)',
 
 	'config' :
 		'key   text primary key,' +
@@ -94,7 +97,8 @@ INDICES = {
 	'albums' : 'created',
 	'albums' : 'accessed',
 	'albums' : 'views',
-	'medias' : 'albumid',
+	'albums' : 'author',
+	'medias' : 'album_id',
 	'medias' : 'status',
 	'medias' : 'path',
 	'medias' : 'url',
@@ -112,23 +116,25 @@ class DB:
 			Connect to database, intializing it if needed.
 		'''
 		self.logger = stderr
+		need_to_create = False
 		if path.exists(DB_FILE):
 			self.debug('__init__: connecting to database file: %s' % DB_FILE)
 		else:
+			need_to_create = True
 			self.debug('__init__: database file (%s) not found, creating...' % DB_FILE)
+
 		self.conn = sqlite3.connect(DB_FILE)
 		self.conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+		if need_to_create:
+			# Create tables
+			for table in SCHEMA:
+				self.create_table(table, SCHEMA[table])
 
-		# Create tables
-		for table in SCHEMA:
-			self.create_table(table, SCHEMA[table])
+			for index in INDICES:
+				self.create_index(index, INDICES[index])
+			# Commit
+			self.commit()
 
-		# Create indices
-		for index in INDICES:
-			self.create_index(index, INDICES[index])
-
-		# Commit
-		self.commit()
 
 	def debug(self, text):
 		'''
@@ -175,7 +181,6 @@ class DB:
 		query = 'create table if not exists %s' % table_name
 		query = '%s(\n%s%s\n%s)' % (query, ',\n'.join(rows), ',' if len(keys) > 0 else '', ',\n'.join(keys))
 		cur.execute(query)
-		self.commit()
 		cur.close()
 
 	def create_index(self, index, key, name=None):
@@ -192,7 +197,6 @@ class DB:
 				%s on %s(%s)
 		''' % (name, index, key)
 		cur.execute(query)
-		self.commit()
 		cur.close()
 	
 	def commit(self):
@@ -204,8 +208,8 @@ class DB:
 			try:
 				self.conn.commit()
 				return
-			except:
-				self.debug('failed to commit, retrying...')
+			except Exception, e:
+				self.debug('failed to commit (%s), retrying...' % str(e))
 				sleep(0.1)
 	
 	def insert(self, table, values):
@@ -373,7 +377,7 @@ class DB:
 		cur.close()
 
 if __name__ == '__main__':
-	db = DB('test.db')
+	db = DB()
 	print 'saving "yes" to config key "test"...'
 	db.set_config('test', 'yes')
 	print 'db.get_config("test") = "%s"' % db.get_config('test')

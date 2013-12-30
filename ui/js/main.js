@@ -16,13 +16,56 @@ function pageChanged() {
 	 || window.location.hash === '#'
 	 || 'rip' in keys) {
 		showPage('page-rip');
-	} else if ('stats' in keys) {
-		showPage('page-stats');
+	} else if ('stats' in keys)   { showPage('page-stats');
+	} else if ('site' in keys)    { showPage('page-about-site');
+	} else if ('terms' in keys)   { showPage('page-about-terms');
+	} else if ('removal' in keys) { showPage('page-about-removal');
+	} else if ('code' in keys)    { showPage('page-about-code');
 	} else {
 		/* TODO */
 		// Page to rip
-		console.log('need to rip:', window.location.hash.replace(/#/, ''));
+		showPage('page-rip');
+		startRip(window.location.hash.substring(1));
 	}
+}
+
+function startRip(baseurl) {
+	var url = decodeURIComponent(baseurl);
+	if (url.indexOf('http') != 0) {
+		url = 'http://' + url;
+	}
+	$('#text-rip-album')
+		.val(url);
+	$('#text-rip-album,#button-rip-album')
+		.attr('disabled', 'disabled');
+	$('#status-rip-album')
+		.html(' getting album info...')
+		.hide()
+		.fadeIn(500);
+	$('<img/>')
+		.attr('src', 'ui/images/spinner.gif')
+		.css({
+			'width'  : '30px',
+			'height' : '30px',
+		})
+		.prependTo( $('#status-rip-album') );
+	$.getJSON('api.cgi?method=rip_album&url=' + encodeURIComponent(url))
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if ('error' in json) {
+				// TODO handle error
+				$('#status-rip-album')
+					.addClass('text-danger')
+					.html(json.error);
+				if ('trace' in json) {
+					$('<div class="text-left"/>')
+						.html(json.trace)
+						.appendTo( $('#status-rip-album') );
+				}
+				return;
+			}
+			// TODO Redirect to rip page
+		});
 }
 
 /** Hide current page, show page with 'id' */

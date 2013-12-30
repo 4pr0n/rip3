@@ -305,3 +305,14 @@ h1.title {
 #supported-album a:active {
 	background-color: #aaa;
 }
+
+.statusbar {
+	font-size: 0.8em;
+}
+
+.text-danger {
+	color: #f33;
+}
+.text-danger:hover {
+	color: #f66;
+}

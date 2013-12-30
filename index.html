@@ -35,7 +35,7 @@
 				</div>
 				<div class="collapse navbar-collapse">
 					<ul class="nav navbar-nav">
-						<li><a href="#rip" id="nav-rip"><span class="glyphicon glyphicon-cloud-download"></span> rip &amp; zip</a></li>
+						<li><a href="#rip" id="nav-rip"><span class="glyphicon glyphicon-cloud-download"></span> rip</a></li>
 						<li><a href="#albums" id="nav-albums"><span class="glyphicon glyphicon-picture"></span> albums</a></li>
 						<li><a href="#video" id="nav-video"><span class="glyphicon glyphicon-film"></span> video</a></li>
 						<li><a href="#stats" id="nav-stats"><span class="glyphicon glyphicon-stats"></span> stats</a></li>
@@ -47,12 +47,12 @@
 							<b class="caret"></b>
 						</a>
 						<ul class="dropdown-menu">
-							<li><a href="#about=site" id="view-about-site"><i class="icon-list-alt"></i> about this site</a></li>
-							<li><a href="#about=terms" id="view-about-mods"><i class="icon-list-alt"></i> terms of service</a></li>
+							<li><a href="#site" id="view-about-site"><i class="icon-list-alt"></i> about this site</a></li>
+							<li><a href="#terms" id="view-about-mods"><i class="icon-list-alt"></i> terms of service</a></li>
 							<li class="divider"></li>
-							<li><a href="#about=removal" id="view-about-mods"><i class="icon-list-alt"></i> content removal</a></li>
+							<li><a href="#removal" id="view-about-mods"><i class="icon-list-alt"></i> content removal</a></li>
 							<li class="divider"></li>
-							<li><a href="#about=code" id="view-about-code"><i class="icon-list-alt"></i> open-source</a></li>
+							<li><a href="#code" id="view-about-code"><i class="icon-list-alt"></i> open-source</a></li>
 						</ul>
 					</ul>
 
@@ -68,17 +68,18 @@
 					<p class="text-center"> view and download albums hosted on various websites
 					<div class="input-group input-group-md">
 						<span class="input-group-btn">
-							<button id="button-rip-album" class="btn btn-default" type="button">
+							<button id="button-rip-album" class="btn btn-primary" type="button">
 								<span class="glyphicon glyphicon-cloud-download"></span>
-								rip &amp; zip
+								<strong>rip</strong>
 							</button>
 						</span>
 						<input type="text" id="text-rip-album" class="form-control" placeholder="http://imgur.com/a/RDxNa" autocomplete="off" value="">
 					</div> <!-- /input-group -->
+					<div class="statusbar" id="status-rip-album"></div>
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
 
-			<div class="container well">
+			<div class="container">
 					<h2>supported sites</h2>
 					<div class="container text-center" id="supported-album">
 						<a class="col-xs-6 col-sm-3 col-md-2">imgur</a>

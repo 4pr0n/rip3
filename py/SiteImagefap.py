@@ -4,7 +4,8 @@ from SiteBase import SiteBase
 
 class SiteImagefap(SiteBase):
 
-	def get_host(self):
+	@staticmethod
+	def get_host():
 		return 'imagefap'
 
 	@staticmethod
@@ -40,6 +41,8 @@ class SiteImagefap(SiteBase):
 		for link in links:
 			link = 'http://%s' % link[link.find('.')+1:].replace('/images/thumb/', '/images/full/')
 			result.append(link)
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 		return result
 
 	@staticmethod

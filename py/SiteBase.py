@@ -4,9 +4,11 @@ from DB import DB
 from Httpy import Httpy
 from calendar import timegm
 from time import gmtime
-from os import path
+from os import path, environ, listdir, getcwd
 
 class SiteBase(object):
+
+	MAX_IMAGES_PER_RIP = 500
 
 	def __init__(self, url):
 		if not self.can_rip(url):
@@ -18,14 +20,15 @@ class SiteBase(object):
 		self.httpy = Httpy()
 		try:
 			self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
+			self.path     = self.db.select_one('path',  'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
 			# Album already exists
 			self.album_exists = True
 		except:
-			self.path = path.join('rips', '%s_%s' % (self.get_host(), self.album_name))
+			self.path = '%s_%s' % (self.get_host(), self.album_name)
 			now = timegm(gmtime())
 			values = [
-				self.album_name, # path
-				self.url,        # source
+				self.album_name, # name
+				self.url,        # source url
 				self.get_host(), # host
 				0,    # ready
 				0,    # pending
@@ -37,7 +40,9 @@ class SiteBase(object):
 				0,    # count
 				None, # zip
 				0,    # views
-				None  # metadata
+				None, # metadata
+				environ.get('REMOTE_ADDR', '0.0.0.0'), # author
+				0     # reports
 			]
 			self.album_id = self.db.insert('albums', values)
 			self.album_exists = False
@@ -46,10 +51,17 @@ class SiteBase(object):
 
 	@staticmethod
 	def get_ripper(url):
-		# TODO Return instantiated class for the ripper
-		rippers = [SiteImagefap]
-		for ripper in rippers:
-			if ripper.can_rip(url):
+		'''
+			Searches through all rippers in this directory for a compatible ripper.
+			Args:
+				url: URL to rip
+			Returns:
+				Uninstantiated class for the ripper that is compatible with the url.
+			Raises:
+				Exception if no ripper can be found, or other errors occurred
+		'''
+		for ripper in SiteBase.iter_rippers():
+			if 'can_rip' in ripper.__dict__ and ripper.can_rip(url):
 				return ripper
 		raise Exception('no compatible ripper found')
 
@@ -85,7 +97,17 @@ class SiteBase(object):
 		'''
 		if self.album_exists:
 			# Don't re-rip an album
-			raise Exception('album already exists')
+			# raise Exception('album already exists')
+			return {
+				'warning'  : 'album already exists',
+				'album_id' : self.album_id,
+				'album'    : self.album_name,
+				'url'      : self.url,
+				'host'     : self.get_host(),
+				'path'     : self.path,
+				'count'    : self.db.count('medias', 'album_id = ?', [self.album_id]),
+				'pending'  : self.db.count('urls', 'album_id = ?', [self.album_id])
+			}
 
 		urls = self.get_urls()
 		# Format URLs to contain all required info
@@ -113,13 +135,24 @@ class SiteBase(object):
 		# Commit
 		self.db.commit()
 
+		return {
+			'album_id' : self.album_id,
+			'album' : self.album_name,
+			'url' : self.url,
+			'host' : self.get_host(),
+			'path' : self.path,
+			'count' : len(urls)
+		}
+
+
 	@staticmethod
 	def get_saveas(url, index):
-		saveas = url[url.rfind('/')+1:]
-		for c in ['?', '&', '#']:
-			if c in saveas:
-				saveas = saveas[:saveas.find(c)]
-		saveas = '%03d_%s' % (index, saveas)
+		if '?' in url: url = url[:url.find('?')]
+		if '#' in url: url = url[:url.find('#')]
+		if '&' in url: url = url[:url.find('&')]
+		fields = url.split('/')
+		while not '.' in fields[-1]: fields.pop(-1)
+		saveas = '%03d_%s' % (index, fields[-1])
 		return saveas
 
 	@staticmethod
@@ -144,23 +177,74 @@ class SiteBase(object):
 				# Just a list of URLs. Add other data as needed
 				real_urls.append({
 					'url'      : url,
-					'index'    : index,
+					'index'    : index + 1,
 					'metadata' : None,
-					'saveas'   : SiteBase.get_saveas(url, index),
+					'saveas'   : SiteBase.get_saveas(url, index + 1),
 					'type'     : SiteBase.get_type(url),
 				})
 			elif type(url) == dict:
 				if 'metadata' not in url:
 					url['metadata'] = None
 				if 'saveas' not in url:
-					url['saveas'] = SiteBase.get_saveas(url['url'], index)
+					url['saveas'] = SiteBase.get_saveas(url['url'], index + 1)
 				if 'type' not in url:
 					url['type'] = SiteBase.get_type(url['url'])
 				if 'index' not in url:
-					url['index'] = index
+					url['index'] = index + 1
 				real_urls.append(url)
 		del urls
 		return real_urls
 
+	@staticmethod
+	def iter_rippers():
+		if not getcwd().endswith('py'):
+			prefix = 'py.'
+		for mod in listdir(path.dirname(path.realpath(__file__))):
+			if not mod.startswith('Site') or not mod.endswith('.py') or mod.startswith('SiteBase'):
+				continue
+			mod = mod[:-3]
+			try:
+				ripper = __import__('%s%s' % (prefix, mod), fromlist=[mod]).__dict__[mod]
+			except:
+				# Don't use a prefix
+				ripper = __import__(mod, fromlist=[mod]).__dict__[mod]
+			yield ripper
+
+	@staticmethod
+	def get_supported_sites():
+		result = []
+		for ripper in SiteBase.iter_rippers():
+			result.append(ripper.get_host())
+		return result
+
+	@staticmethod
+	def update_supported_sites_statuses():
+		db = DB()
+		cur = db.conn.cursor()
+		for ripper in SiteBase.iter_rippers():
+			if 'test' not in ripper.__dict__ or \
+					'get_host' not in ripper.__dict__:
+				continue
+			host = ripper.get_host()
+			available = -1
+			message = ''
+			try:
+				ripper.test()
+				available = 1
+			except Exception, e:
+				available = 0
+				message = str(e)
+			q = 'insert or replace into sites values (?, ?, ?, ?)'
+			cur.execute(q, [host, available, message, timegm(gmtime())])
+		db.commit()
+		cur.close()
+
 if __name__ == '__main__':
-	pass
+	'''
+	url = 'http://www.imagefap.com/pictures/3150651/Cell-Phone-Mirror-Girl'
+	Ripper = SiteBase.get_ripper(url)
+	print Ripper.get_host()
+	#print ripper.start()
+	'''
+	#print SiteBase.get_supported_sites()
+	SiteBase.update_supported_sites_statuses()
