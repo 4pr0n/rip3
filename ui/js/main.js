@@ -12,21 +12,42 @@ $(window).bind('popstate', function(e) {
 function pageChanged() {
 	$('a:focus').blur(); // Blur focused link
 	var keys = getQueryHashKeys();
-	if (window.location.hash === ''
-	 || window.location.hash === '#'
-	 || 'rip' in keys) {
-		showPage('page-rip');
-	} else if ('stats' in keys)   { showPage('page-stats');
-	} else if ('site' in keys)    { showPage('page-about-site');
-	} else if ('terms' in keys)   { showPage('page-about-terms');
-	} else if ('removal' in keys) { showPage('page-about-removal');
-	} else if ('code' in keys)    { showPage('page-about-code');
-	} else {
+	if      ('stats'   in keys) { showPage('page-stats'); }
+	else if ('site'    in keys) { showPage('page-about-site'); }
+	else if ('terms'   in keys) { showPage('page-about-terms'); }
+	else if ('removal' in keys) { showPage('page-about-removal'); }
+	else if ('code'    in keys) { showPage('page-about-code'); }
+	else if ('albums'  in keys) {
+		showPage('albums');
+		// TODO Load albums
+	}
+	else if ('album' in keys) {
+		showPage('album');
+		// TODO Load album at keys.album
+	}
+	else if (window.location.hash.indexOf('.') >= 0) {
 		/* TODO */
 		// Page to rip
 		showPage('page-rip');
 		startRip(window.location.hash.substring(1));
 	}
+	else {
+		showPage('page-rip');
+		$('#text-rip-album').val('');
+		$('#button-rip-album, #text-rip-album').removeAttr('disabled');
+		$('#status-rip-album').html('');
+	}
+}
+
+function getSpinner() {
+	return $('<img/>')
+		.attr('src', 'ui/images/spinner.gif')
+		.css({
+			'width'  : '30px',
+			'height' : '30px',
+			'margin-left'  : '5px',
+			'margin-right' : '5px',
+		});
 }
 
 function startRip(baseurl) {
@@ -40,32 +61,56 @@ function startRip(baseurl) {
 		.attr('disabled', 'disabled');
 	$('#status-rip-album')
 		.html(' getting album info...')
+		.prepend( getSpinner() )
 		.hide()
 		.fadeIn(500);
-	$('<img/>')
-		.attr('src', 'ui/images/spinner.gif')
-		.css({
-			'width'  : '30px',
-			'height' : '30px',
-		})
-		.prependTo( $('#status-rip-album') );
-	$.getJSON('api.cgi?method=rip_album&url=' + encodeURIComponent(url))
+	var request = 'api.cgi?method=rip_album&url=' + encodeURIComponent(url)
+	var ajax = $.getJSON(request)
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
+			$('#button-rip-album').removeData('ajax');
 			if ('error' in json) {
 				// TODO handle error
 				$('#status-rip-album')
 					.addClass('text-danger')
 					.html(json.error);
 				if ('trace' in json) {
-					$('<div class="text-left"/>')
-						.html(json.trace)
+					$('<div class="text-left" style="line-height: 1.0em"/>')
+						.append( $('<small/>').html(json.trace) )
 						.appendTo( $('#status-rip-album') );
 				}
-				return;
 			}
-			// TODO Redirect to rip page
+			else {
+				if ('warning' in json) {
+					$('#status-rip-album').empty();
+					$('<div class="text-warning"/>')
+						.html(json.warning)
+						.prepend( getSpinner() )
+						.prependTo( $('#status-rip-album') );
+				}
+				else {
+					$('#status-rip-album')
+						.html('images retrieved, ripping will start momentarily')
+						.prepend( getSpinner() );
+				}
+				// Redirect to album
+				setTimeout(function() {
+					window.location.hash = 'album=' + json.path;
+				}, 1500);
+			}
+			$('#text-rip-album,#button-rip-album').removeAttr('disabled');
 		});
+	$('#button-rip-album').data('ajax', ajax);
+}
+
+function abortRip() {
+	var ajax = $('#button-rip-album').data('ajax');
+	if (ajax !== undefined) {
+		ajax.abort();
+	}
+	$('#text-rip-album').val('');
+	$('#button-rip-album, #text-rip-album').removeAttr('disabled');
+	$('#status-rip-album').html('');
 }
 
 /** Hide current page, show page with 'id' */

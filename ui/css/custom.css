@@ -310,9 +310,9 @@ h1.title {
 	font-size: 0.8em;
 }
 
-.text-danger {
+.text-danger, .text-danger:hover {
 	color: #f33;
 }
-.text-danger:hover {
-	color: #f66;
+.text-warning, .text-warning:hover {
+	color: #f90;
 }

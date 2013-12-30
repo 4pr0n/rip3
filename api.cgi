@@ -50,8 +50,7 @@ def rip_album(keys):
 		from py.SiteBase import SiteBase
 		Ripper = SiteBase.get_ripper(url)
 		ripper = Ripper(url)
-		print ripper.get_host()
-		#return ripper.start()
+		return ripper.start()
 	except Exception, e:
 		return err(str(e), tb=format_exc())
 
