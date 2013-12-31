@@ -73,7 +73,40 @@ function loadAlbum(album) {
 			}
 			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
 			$('#album-info-source').html(json.url);
-			$('#album-info-download').html(json.zip);
+			if (json.zip === undefined || json.zip === null) {
+				/* TODO create zip button */
+				$('#album-info-download').empty();
+				$('<button type="button"/>')
+					.addClass('btn btn-primary btn-xs')
+					.html('generate zip')
+					.click(function() {
+						$('#album-info-download')
+							.empty()
+							.append( getSpinner() );
+						$.getJSON('api.cgi?method=generate_zip&album=' + encodeURIComponent($('#album-container').data('album')['album']))
+							.fail(function() { /* TODO */ })
+							.done(function(json) {
+								$('<a/>')
+									.attr('href', json.zip)
+									.html('.zip (' + bytesToHR(json.filesize) + ')')
+									.css({
+										'font-weight': 'bold',
+										'text-decoration': 'underline'
+									})
+									.appendTo( $('#album-info-download').empty() );
+							});
+					})
+					.appendTo( $('#album-info-download') );
+			} else {
+				$('<a/>')
+					.attr('href', json.zip)
+					.html('.zip (' + bytesToHR(json.filesize) + ')')
+					.css({
+						'font-weight': 'bold',
+						'text-decoration': 'underline'
+					})
+					.appendTo( $('#album-info-download').empty() );
+			}
 			$('#album-info-size').html(json.count + ' images <small>(' + bytesToHR(json.filesize) + ')</small>');
 			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
 			$('#album-container').data('album')['total_count'] = json.count;
@@ -81,7 +114,7 @@ function loadAlbum(album) {
 			setupGetURLs();
 		});
 
-	// Album progress
+	// Album progress, decides if thumbnails should be loaded
 	checkAlbumProgress(album);
 }
 
@@ -110,7 +143,7 @@ function checkAlbumProgress(album) {
 			// Refresh progress again
 			setTimeout(function() {
 				checkAlbumProgress( $('#album-progress-container').data('album') );
-			}, 100);
+			}, 500);
 		});
 }
 

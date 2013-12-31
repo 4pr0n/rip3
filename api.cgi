@@ -21,6 +21,7 @@ def main():
 	elif method == 'get_album_progress': return get_album_progress(keys)
 	elif method == 'get_album':          return get_album(keys)
 	elif method == 'get_album_urls':     return get_album_urls(keys)
+	elif method == 'generate_zip':       return generate_zip(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -155,6 +156,11 @@ def get_album(keys):
 			'metadata' : metadata
 		})
 	cur.close()
+	# Update modified time
+	from time import gmtime
+	from calendar import timegm
+	db.update('albums', 'modified = ?', 'path like ?', [ timegm(gmtime()), keys['album'] ])
+	db.commit()
 	return response
 
 def get_album_urls(keys):
@@ -191,6 +197,47 @@ def get_album_urls(keys):
 			result.append(url)
 	cur.close()
 	return result
+
+def generate_zip(keys):
+	if not 'album' in keys:
+		return err('album required')
+
+	from os import path
+	album_path = path.join('rips', keys['album'])
+	zip_path = '%s.zip' % album_path
+	if path.exists(zip_path):
+		return {
+			'zip'      : zip_path,
+			'filesize' : path.getsize(zip_path)
+		}
+
+	if not path.exists(album_path):
+		return err('album not found')
+
+	from py.DB import DB
+	db = DB()
+	if db.count('albums', 'path like ?', [keys['album']]) == 0:
+		return err('album not found in database')
+
+	# Album exists, zip does not. Zip it. Zip it good.
+	from os      import walk
+	from zipfile import ZipFile, ZIP_STORED
+
+	db.update('albums', 'zip = ?', 'path like ?', [zip_path, keys['album'] ])
+	db.commit()
+
+	z = ZipFile(zip_path, "w", ZIP_STORED) # Using stored to conserve CPU
+	for root, dirs, files in walk(album_path):
+		if root.endswith('/thumbs'): continue
+		for fn in files:
+			absfn = path.join(root, fn)
+			zipfn = path.basename(absfn)
+			z.write(absfn, zipfn)
+	z.close()
+	return {
+		'zip'      : zip_path,
+		'filesize' : path.getsize(zip_path)
+	}
 
 
 ###################
