@@ -124,6 +124,7 @@ class RipManager(object):
 			'error'     : None, #
 			'type'      : url['type'],
 			'image_name': url['saveas'],
+			'filesize'  : 0,    #
 			'width'     : 0,    #
 			'height'    : 0,    #
 			'thumb_name': None, #
@@ -148,13 +149,21 @@ class RipManager(object):
 		try:
 			self.httpy.download(url['url'], saveas)
 		except Exception, e:
+			print 'failed to download %s to %s: %s\n%s' % (url['url'], saveas, str(e), str(format_exc()))
 			result['error'] = 'failed to download %s to %s: %s\n%s' % (url['url'], saveas, str(e), str(format_exc()))
 			self.results.append(result)
 			return
 
 		# Save image info
 		result['filesize'] = path.getsize(saveas)
-		(result['width'], result['height']) = ImageUtils.get_dimensions(saveas)
+		try:
+			(result['width'], result['height']) = ImageUtils.get_dimensions(saveas)
+		except Exception, e:
+			# This fails if we can't identify the image file. Consider it errored
+			print 'failed to identify image file %s from %s: %s\n%s' % (saveas, url['url'], str(e), format_exc())
+			result['error'] = 'failed to identify image file %s from %s: %s\n%s' % (saveas, url['url'], str(e), format_exc())
+			self.results.append(result)
+			return
 
 		# Get thumbnail
 		ImageUtils.create_subdirectories(path.join(dirname, 'thumbs'))

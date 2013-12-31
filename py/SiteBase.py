@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+'''
+	Abstract interface for album rippers
+'''
+
 from DB import DB
 from Httpy import Httpy
 from calendar import timegm
@@ -8,46 +12,34 @@ from os import path, environ, listdir, getcwd
 
 class SiteBase(object):
 
+	'''
+		Maximum images allowed per rip.
+		Note: This can be overridden by inheriting subclasses
+	'''
 	MAX_IMAGES_PER_RIP = 500
 
 	def __init__(self, url):
 		if not self.can_rip(url):
+			# Don't instantiate if we can't rip it
 			raise Exception('ripper (%s) cannot rip URL (%s)' % (self.__class__.__name__, url))
 		self.url = url
-		self.url = self.sanitize_url()
 		self.album_name = self.get_album_name()
 		self.db = DB()
 		self.httpy = Httpy()
+
+		# TODO Should this DB-related stuff be moved to start()?
+		#      Do we want to add bogus URLs to the DB? How will we remove them?
+		# This album needs to be in the DB. Get info from the DB if it exists, otherwise add it.
 		try:
 			self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
 			self.path     = self.db.select_one('path',  'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
 			# Album already exists
 			self.album_exists = True
 		except:
-			self.path = '%s_%s' % (self.get_host(), self.album_name)
-			now = timegm(gmtime())
-			values = [
-				self.album_name, # name
-				self.url,        # source url
-				self.get_host(), # host
-				0,    # ready
-				0,    # pending
-				0,    # filesize
-				self.path, # path
-				now,  # created
-				now,  # modified
-				now,  # accessed
-				0,    # count
-				None, # zip
-				0,    # views
-				None, # metadata
-				environ.get('REMOTE_ADDR', '0.0.0.0'), # author
-				0     # reports
-			]
-			self.album_id = self.db.insert('albums', values)
+			# Album does not exist.
 			self.album_exists = False
-		# Add album to DB, store album rowid in self.album_id
-		pass
+			self.album_id = None
+			self.path = '%s_%s' % (self.get_host(), self.album_name)
 
 	@staticmethod
 	def get_ripper(url):
@@ -65,18 +57,27 @@ class SiteBase(object):
 				return ripper
 		raise Exception('no compatible ripper found')
 
-	''' Methods for getting info about the album '''
+
+	''' Below are methods for getting info about the album '''
+
 	@staticmethod
 	def can_rip(url):
+		'''
+			Returns:
+				True if this ripper can rip the given URL, False otherwise
+		'''
 		raise Exception('can_rip() not overridden by inheriting class')
 		
-	def sanitize_url(self, url):
-		raise Exception('sanitize_url() not overridden by inheriting class')
-
 	def get_album_name(self, url):
+		'''
+			Returns: Name of album unique for this ripper's host
+		'''
 		raise Exception('get_album_name() not overridden by inheriting class')
 
 	def get_host(self, url):
+		'''
+			Returns the 'name' of this ripper's host
+		'''
 		raise Exception('get_host() not overridden by inheriting class')
 
 	def get_urls(self):
@@ -90,14 +91,15 @@ class SiteBase(object):
 		'''
 		raise Exception('get_urls() not overridden by inheriting class')
 
-	''' Methods for altering the state of the album in the DB '''
+
+	''' Below are methods for altering the state of the album in the DB '''
+
 	def start(self):
 		'''
 			Get list of URLs, add to database, mark album as pending to be ripped
 		'''
 		if self.album_exists:
-			# Don't re-rip an album
-			# raise Exception('album already exists')
+			# Don't re-rip an album. Return info about existing album.
 			return {
 				'warning'  : 'album already exists',
 				'album_id' : self.album_id,
@@ -110,12 +112,37 @@ class SiteBase(object):
 			}
 
 		urls = self.get_urls()
+		# Enforce max images limit
+		if len(urls) > self.MAX_IMAGES_PER_RIP:
+			urls = urls[:self.MAX_IMAGES_PER_RIP]
 		# Format URLs to contain all required info
 		urls = SiteBase.format_urls(urls)
 
 		if len(urls) == 0:
 			# Can't rip if we don't have URLs
 			raise Exception('no URLs returned from %s' % self.url)
+
+		# Insert empty album into DB
+		now = timegm(gmtime())
+		values = [
+			self.album_name, # name
+			self.url,        # source url
+			self.get_host(), # host
+			0,    # ready
+			1,    # pending
+			0,    # filesize
+			self.path, # path
+			now,  # created
+			now,  # modified
+			now,  # accessed
+			len(urls),  # count
+			None, # zip
+			0,    # views
+			None, # metadata
+			environ.get('REMOTE_ADDR', '0.0.0.0'), # author
+			0     # reports
+		]
+		self.album_id = self.db.insert('albums', values)
 
 		# Add URL to list of urls to be downloaded
 		now = timegm(gmtime())
@@ -130,9 +157,6 @@ class SiteBase(object):
 					now
 				]
 			self.db.insert('urls', values)
-		# Mark album as pending
-		self.db.update('albums', 'pending = 1, count = ?', 'rowid = ?', [len(urls), self.album_id])
-		# Commit
 		self.db.commit()
 
 		return {
@@ -147,6 +171,7 @@ class SiteBase(object):
 
 	@staticmethod
 	def get_saveas(url, index):
+		''' Strips extraneous characters from URL '''
 		if '?' in url: url = url[:url.find('?')]
 		if '#' in url: url = url[:url.find('#')]
 		if '&' in url: url = url[:url.find('&')]
@@ -157,6 +182,13 @@ class SiteBase(object):
 
 	@staticmethod
 	def get_type(url):
+		'''
+			Args:
+				url: The URL we are about to download
+			Returns:
+				The 'type' of medi at the URL (divined from file extension
+				e.g. 'video', 'image', 'text' or 'html'
+		'''
 		ext = url[url.rfind('.')+1:].lower()
 		if ext in ['mp4', 'flv', 'wmv', 'mpg']:
 			return 'video'
@@ -169,6 +201,18 @@ class SiteBase(object):
 	
 	@staticmethod
 	def format_urls(urls):
+		'''
+			Handles response from ripper's get_urls() function.
+			Automatically generates saveas and type if not given.
+
+			Args:
+			  urls: Either:
+			        1. A list of URLs (list of str's)
+			        2. A list of dicts containing 'url', 'index', 'metadata', 'saveas', and/or 'type'
+
+			Returns:
+				List of dicts containing url, index, metadata, saveas, and type
+		'''
 		# Format list of urls as expected
 		# We need url, saveas, type, and metadata
 		real_urls = []
@@ -197,6 +241,9 @@ class SiteBase(object):
 
 	@staticmethod
 	def iter_rippers():
+		'''
+			Iterator over all rippers in this directory
+		'''
 		if not getcwd().endswith('py'):
 			prefix = 'py.'
 		for mod in listdir(path.dirname(path.realpath(__file__))):
@@ -219,6 +266,10 @@ class SiteBase(object):
 
 	@staticmethod
 	def update_supported_sites_statuses():
+		'''
+			Runs 'test()' on every ripper.
+			Updates database with the ripper's current status (available, errored, etc
+		'''
 		db = DB()
 		cur = db.conn.cursor()
 		for ripper in SiteBase.iter_rippers():
@@ -241,7 +292,7 @@ class SiteBase(object):
 
 if __name__ == '__main__':
 	'''
-	url = 'http://www.imagefap.com/pictures/3150651/Cell-Phone-Mirror-Girl'
+	url = 'http://www.imagefap.com/pictures/3150651/'
 	Ripper = SiteBase.get_ripper(url)
 	print Ripper.get_host()
 	#print ripper.start()
