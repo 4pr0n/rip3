@@ -336,3 +336,7 @@ h1.title {
 	text-align: center;
 	font-size: 1.2em;
 }
+
+.album-urls {
+	font-weight: bold;
+}

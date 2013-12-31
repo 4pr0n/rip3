@@ -61,6 +61,7 @@ function loadAlbum(album) {
 			'count' : 12,
 		})
 		.empty();
+	// Album info
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -76,8 +77,60 @@ function loadAlbum(album) {
 			$('#album-info-size').html(json.count + ' images <small>(' + bytesToHR(json.filesize) + ')</small>');
 			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
 			$('#album-container').data('album')['total_count'] = json.count;
+			// "Get URLs" buttons
+			setupGetURLs();
 		});
-	loadAlbumImages();
+
+	// Album progress
+	checkAlbumProgress(album);
+}
+
+function checkAlbumProgress(album) {
+	$.getJSON('api.cgi?method=get_album_progress&album=' + encodeURIComponent(album))
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if (json.completed + json.errored >= json.total) {
+				// Album is completed, show album
+				$('#album-progress-container').slideUp(200);
+				loadAlbumImages();
+				return;
+			}
+			// Album is still in progress, show status
+			$('#album-progress-container')
+				.slideDown(200)
+				.data('album', album);
+			var perc = (json.completed / json.total);
+			$('#album-progressbar-completed').css('width', (json.completed * 100/ json.total) + '%');
+			$('#album-progressbar-pending').css('width',   ((json.pending + json.inprogress) * 100 / json.total) + '%');
+			$('#album-progressbar-errored').css('width',   (json.errored * 100 / json.total) + '%');
+			$('#album-progress-completed').html(json.completed);
+			$('#album-progress-pending').html(json.pending + json.inprogress);
+			$('#album-progress-errored').html(json.errored);
+			$('#album-progress-elapsed').html(secondsToHR(json.elapsed));;
+			// Refresh progress again
+			setTimeout(function() {
+				checkAlbumProgress( $('#album-progress-container').data('album') );
+			}, 100);
+		});
+}
+
+/** Sets up "source URLs" and "mirrored URLs" buttons */
+function setupGetURLs() {
+	$('#album-info-urls-source, #album-info-urls-rarchives')
+		.click(function() {
+			if ( $('#album-info-urls').is(':visible') ) {
+				$('#album-info-urls').slideUp(200);
+			}
+			else {
+				$.getJSON('api.cgi?method=get_album_urls&album=' + encodeURIComponent($('#album-container').data('album')['album']) + '&source=' + ($(this).attr('id').indexOf('rarchives') >= 0 ? 'rarchives' : 'site'))
+					.fail(function() { /* TODO */ })
+					.done(function(json) {
+						$('#album-info-urls-text')
+							.val(json.join('\n'));
+						$('#album-info-urls').slideDown(500);
+					});
+			}
+		});
 }
 
 function loadAlbumImages() {
@@ -179,7 +232,7 @@ function loadAlbumImages() {
 						return false;
 					});
 				$('<div class="caption"/>')
-					.html(image.width + '<small>x</small>' + image.height + ' (' + image.filesize + ')')
+					.html(image.width + '<small>x</small>' + image.height + ' (' + bytesToHR(image.filesize) + ')')
 					.appendTo( $a );
 			}
 			if (albumdata.total_count !== undefined && 
@@ -329,7 +382,7 @@ function setupExamples() {
 		'flickr'      : 'https://secure.flickr.com/photos/peopleofplatt/sets/72157624572361792/with/6166517381/',
 		'photobucket' : 'http://s1216.beta.photobucket.com/user/Liebe_Dich/profile/',
 		'instagram'   : 'http://instagram.com/joselyncano#',
-		'imagefap'    : 'http://www.imagefap.com/pictures/2885204/Kentucky-Craigslist',
+		'imagefap'    : 'http://www.imagefap.com/pictures/3802288/Blake-Lively-Leaked-Nude-iPhone-Photos',
 		'imagearn'    : 'http://imagearn.com/gallery.php?id=1616', // 'http://imagearn.com/gallery.php?id=82587',
 		'imagebam'    : 'http://www.imagebam.com/gallery/3b73c0f6ba797e77a33b46779fbfe678/',
 		'xhamster'    : 'http://xhamster.com/photos/gallery/1479233/sarah_from_glasgow.html',
@@ -392,3 +445,20 @@ function bytesToHR(bytes) {
 	return '?b';
 }
 
+function secondsToHR(sec) {
+	var units = {
+		31536000: 'yr',
+		2592000 : 'mon',
+		86400   : 'day',
+		3600    : 'hr',
+		60      : 'min',
+		1       : 'sec'
+	};
+	for (var unit in units) {
+		if (sec > unit) {
+			var hr = Math.floor(sec / unit);
+			return hr + units[unit];
+		}
+	}
+	return '?s';
+}	

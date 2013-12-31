@@ -128,14 +128,45 @@
 					<span class="album-value" id="album-info-source">http://asdf.com</span>
 					<p>
 					<span class="album-key">download:</span>
-					<span class="album-value" id="album-info-download">http://asdf.com</span>
+					<span class="album-value" id="album-info-download">http://asdf.com</span> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">source urls</button> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">mirrored urls</button>
+					<div id="album-info-urls" style="display: none">
+						<textarea class="input-sm" id="album-info-urls-text" rows="20" style="width: 100%"></textarea>
+					</div>
 					<p>
 					<span class="album-key">size:</span>
 					<span class="album-value" id="album-info-size">10</span>
 					<p>
 					<span class="album-key">created:</span>
 					<span class="album-value" id="album-info-created">2013-12-30 12:30</span>
-				</div> <!-- /container -->
+					<div id="album-progress-container" style="display: none">
+						<h2>ripping progress</h2>
+						<p>
+						<div class="progress progress-striped active">
+							<div class="progress-bar progress-bar-success" id="album-progressbar-completed"></div>
+							<div class="progress-bar progress-bar-warning" id="album-progressbar-pending"></div>
+							<div class="progress-bar progress-bar-danger" id="album-progressbar-errored"></div>
+						</div>
+						<div class="container">
+							<div class="col-xs-12 col-sm-4 col-md-3">
+								<span class="album-progress-key text-success">completed:</span>
+								<span class="album-progress-value text-success" id="album-progress-completed">0</span>
+							</div>
+							<div class="col-xs-12 col-sm-4 col-md-3">
+								<span class="album-progress-key text-warning">pending:</span>
+								<span class="album-progress-value text-warning" id="album-progress-pending">0</span>
+							</div>
+							<div class="col-xs-12 col-sm-4 col-md-2">
+								<span class="album-progress-key text-danger">errored:</span>
+								<span class="album-progress-value text-danger" id="album-progress-errored">0</span>
+							</div>
+							<div class="col-xs-12 col-sm-12 col-md-4">
+								<span class="album-progress-key">time elapsed:</span>
+								<span class="album-progress-value" id="album-progress-elapsed">00:00</span>
+							</div>
+						</div>
+					</div>
+					</div> <!-- /container (progress) -->
+				</div> <!-- /container (album info) -->
 			</div> <!-- /jumbotron -->
 
 			<div class="container" id="album-container">

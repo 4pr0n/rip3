@@ -18,7 +18,9 @@ def main():
 	elif method == 'count_rips_by_user': return count_rips_by_user(keys)
 	elif method == 'rip_album':          return rip_album(keys)
 	elif method == 'get_album_info':     return get_album_info(keys)
+	elif method == 'get_album_progress': return get_album_progress(keys)
 	elif method == 'get_album':          return get_album(keys)
+	elif method == 'get_album_urls':     return get_album_urls(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -56,6 +58,34 @@ def rip_album(keys):
 	except Exception, e:
 		return err(str(e), tb=format_exc())
 
+
+##############
+# SINGLE ALBUM
+
+def get_album_progress(keys):
+	if not 'album' in keys:
+		return err('album required')
+	from py.DB import DB
+	from time import gmtime
+	from calendar import timegm
+	db = DB()
+	(rowid,created) = db.select('rowid, created', 'albums', 'path like ?', [keys['album']]).fetchone()
+	total      = db.select_one('count', 'albums', 'rowid = ?', [rowid])
+	pending    = db.count('urls', 'album_id = ?', [rowid])
+	completed  = db.count('medias', 'album_id = ? and valid = 1', [rowid])
+	errored    = db.count('medias', 'album_id = ? and error is not null', [rowid])
+	inprogress = total - pending - completed - errored
+	elapsed    = timegm(gmtime()) - created
+	return {
+		'album'      : keys['album'],
+		'total'      : total,
+		'pending'    : pending,
+		'completed'  : completed,
+		'errored'    : errored,
+		'inprogress' : inprogress,
+		'elapsed'    : elapsed
+	}
+	
 def get_album_info(keys):
 	if not 'album' in keys:
 		return err('album required')
@@ -86,6 +116,7 @@ def get_album_info(keys):
 		'views' : views,
 		'metadata' : metadata
 	}
+	cur.close()
 	return response
 
 def get_album(keys):
@@ -123,7 +154,44 @@ def get_album(keys):
 			'theight'  : theight,
 			'metadata' : metadata
 		})
+	cur.close()
 	return response
+
+def get_album_urls(keys):
+	if not 'album' in keys:
+		return err('album required')
+	source = keys.get('source', 'rarchives')
+	if source == 'site':
+		column = 'url'
+	else:
+		column = 'image_name'
+	q = '''
+		select %s
+		from medias
+		where album_id in (select rowid from albums where path like ?)
+	''' % column
+	from py.DB import DB
+	db = DB()
+	cur = db.conn.cursor()
+	curexec = cur.execute(q, [ keys['album'] ])
+	result = []
+	for (url, ) in curexec:
+		if source != 'site':
+			url = 'http://rip.rarchives.com/rips/%s/%s' % (keys['album'], url)
+		result.append(url)
+	# Also grab pending URLs
+	if source == 'site':
+		q = '''
+			select url
+				from urls
+				where album_id in (select rowid from albums where path like ?)
+		'''
+		curexec = cur.execute(q, [ keys['album'] ])
+		for (url, ) in curexec:
+			result.append(url)
+	cur.close()
+	return result
+
 
 ###################
 # HELPER METHODS
