@@ -13,6 +13,7 @@ function pageChanged() {
 	$('a:focus').blur(); // Blur focused link
 	var keys = getQueryHashKeys();
 	if      ('stats'   in keys) { showPage('page-stats'); }
+	else if ('video'   in keys) { showPage('page-video'); }
 	else if ('site'    in keys) { showPage('page-about-site'); }
 	else if ('terms'   in keys) { showPage('page-about-terms'); }
 	else if ('removal' in keys) { showPage('page-about-removal'); }
