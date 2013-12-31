@@ -25,55 +25,56 @@ except ImportError:
 '''
 SCHEMA = {
 	'albums' :
-		'name       text primary key,' +
-		'url        text,' +
-		'host       text,' +
-		'ready      integer,' +
-		'pending    integer,' +
-		'filesize   integer,' +
-		'path       text,' +
-		'created    integer,' +
-		'modified   integer,' +
-		'accessed   integer,' +
-		'count      integer,' +
-		'zip        text,' +
-		'views      integer,' +
-		'metadata   text,' +
-		'author     text,' +
-		'reports    integer',
+		'name       text,' +    # Name of the album (unique per host)
+		'url        text,' +    # Source
+		'host       text,' +    # Name of site
+		'ready      integer,' + # If album is completed
+		'pending    integer,' + # If album is not completed
+		'filesize   integer,' + # Total bytes for all content
+		'path       text primary key,' + # Combination of host_name
+		'created    integer,' + # Date created
+		'modified   integer,' + # Date last modified
+		'accessed   integer,' + # Date accessed
+		'count      integer,' + # Number of medias in album
+		'zip        text,'    + # Link to zip file
+		'views      integer,' + # Number of views
+		'metadata   text,' +    # Info about the album
+		'author     text,' +    # IP of user who ripped it
+		'reports    integer',   # Number of reports
 
 	'medias' :
-		'album_id   integer,' +
-		'i_index    integer,' +
-		'url        text,' +
-		'valid      integer,' +
-		'error      text,' +
-		'type       text,' +
-		'image_name text,' +
-		'width      integer,' +
-		'height     integer,' +
-		'filesize   integer,' +
-		'thumb_name text,' +
-		't_width    integer,' +
-		't_height   integer,' +
-		'metadata   text,' +
+		'album_id   integer,' + # rowid of album
+		'i_index    integer,' + # Index image appears in album
+		'url        text,' +    # Source
+		'valid      integer,' + # If image is valid, downloaded, viewable
+		'error      text,' +    # If any errors occurred while downloading
+		'type       text,' +    # Media type: image,video,thread
+		'image_name text,' +    # Filename of image, exists in album's path
+		'width      integer,' + # Image width
+		'height     integer,' + # Image height
+		'filesize   integer,' + # Size of image
+		'thumb_name text,' +    # Filename of thumbnail, exists in album's path + /thumbs/
+		't_width    integer,' + # Thumb width
+		't_height   integer,' + # Thumb height
+		'metadata   text,' +    # Info about image
 		'foreign key(album_id) references albums(rowid),' +
 		'primary key(album_id, i_index)',
 
 	'urls' :
-		'album_id  integer,' +
-		'i_index  integer,' +
-		'url      text,' +
-		'saveas   text,' +
-		'type     text,' +
-		'metadata text,' +
-		'added    integer',
+		'album_id  integer,' + # rowid of album
+		'i_index  integer,' +  # Index image appears in album
+		'url      text,' +     # source URL
+		'saveas   text,' +     # What the ripper thinks the file should be saved as
+		'type     text,' +     # Media type
+		'metadata text,' +     # Info about image
+		'added    integer,' +  # Date added to DB
+		'primary key(album_id, i_index)',
 
 	'sites' :
-		'host      text primary key,' +
-		'available integer,' +
-		'message   text,' +
-		'checked   integer',
+		'host      text primary key,' + # Host name
+		'available integer,' + # If host is available
+		'message   text,' +    # Message if not available
+		'checked   integer',   # Date last checked for availability
 
 	'reports' :
 		'album_id integer,' +
@@ -81,6 +82,21 @@ SCHEMA = {
 		'message  text,' +
 		'foreign key(album_id) references albums(rowid),' +
 		'primary key(album_id, user)',
+	
+	'blacklist' :
+		'host    text,' + # Name of host 
+		'album   text,' + # Name of album
+		'reason  text,' + # Reason for blacklist
+		'admin   text,' + # IP of admin blacklisting
+		'primary key(host, album)',
+	
+	'users' :
+		'ip              text primary key,' + # IP of user
+		'warning_message text,' +    # Warning message to display to user
+		'warnings        integer,' + # Number of times user has been warned
+		'warned          integer,' + # Date user was last warned
+		'banned          integer,' + # If user is banned
+		'banned_reason   text',      # Reason for banning
 
 	'config' :
 		'key   text primary key,' +

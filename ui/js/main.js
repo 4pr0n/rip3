@@ -18,12 +18,11 @@ function pageChanged() {
 	else if ('removal' in keys) { showPage('page-about-removal'); }
 	else if ('code'    in keys) { showPage('page-about-code'); }
 	else if ('albums'  in keys) {
-		showPage('albums');
+		showPage('page-albums');
 		// TODO Load albums
 	}
 	else if ('album' in keys) {
-		showPage('album');
-		// TODO Load album at keys.album
+		loadAlbum(keys.album);
 	}
 	else if (window.location.hash.indexOf('.') >= 0) {
 		/* TODO */
@@ -37,6 +36,172 @@ function pageChanged() {
 		$('#button-rip-album, #text-rip-album').removeAttr('disabled');
 		$('#status-rip-album').html('');
 	}
+}
+
+function albumScrollHandler() {
+	var page     = $(document).height(); // Height of document
+	var viewport = $(window).height();   // Height of viewing window
+	var scroll   = $(document).scrollTop() || window.pageYOffset; // Scroll position (top)
+	var remain = page - (viewport + scroll);
+	if (viewport > page || // Viewport is bigger than entire page
+	    remain < 300) {    // User has scrolled down far enough
+		loadAlbumImages();
+	}
+}
+
+function loadAlbum(album) {
+	showPage('page-album');
+	$(window)
+		.unbind('scroll')
+		.scroll(albumScrollHandler);
+	$('#album-container')
+		.data('album', {
+			'album' : album,
+			'start' : 0,
+			'count' : 12
+		})
+		.slideUp(200, 
+			function() { 
+				$(this).empty()
+			});
+	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if (json === null) { json = {'error' : 'null response'}; }
+			if ('error' in json) {
+				// TODO Handle error
+				$('#album-info-name').html(json.error + ' <small>error</small>');
+				throw new Error(json.error);
+			}
+			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
+			$('#album-info-source').html(json.url);
+			$('#album-info-download').html(json.zip);
+			$('#album-info-size').html(json.count + ' images <small><b>' + json.filesize + 'b</b></small>');
+			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
+		});
+	loadAlbumImages(album);
+}
+
+function loadAlbumImages(album) {
+	var albumdata = $('#album-container').data('album');
+	if (albumdata.loading) return;
+	albumdata.loading = true;
+	if (albumdata.start === undefined) albumdata.start = 0;
+	if (albumdata.count === undefined) albumdata.count = 12;
+	albumdata.start += albumdata.count;
+	$.getJSON('api.cgi?method=get_album&album=' + encodeURIComponent(album) + '&start=' + albumdata.start + '&count=' + albumdata.count)
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if ('error' in json) {
+				// TODO Handle error
+				$('#album-info-name').html(json.error + ' <small>error</small>');
+				throw new Error(json.error);
+			}
+			var image;
+			for (var i in json) {
+				image = json[i];
+				/*
+				'index'    : index,
+				'url'      : url,
+				'valid'    : valid == 1,
+				'error'    : error,
+				'type'     : filetype,
+				'image'    : name,
+				'width'    : width,
+				'height'   : height,
+				'size'     : filesize,
+				'thumb'    : thumb,
+				'twidth'   : twidth,
+				'theight'  : theight,
+				'metadata' : metadata
+				*/
+				var $a = $('<a/>')
+					.attr('href', image.image)
+					.css('background-color', 'rgba(0,0,0,0.0)')
+					.addClass('thumbnail');
+				var ratio = 200 / image.theight;
+				console.log('ratio', ratio, 'twidthb4', image.twidth, 'theightb4', image.theight);
+				image.theight *= ratio;
+				image.twidth *= ratio;
+				console.log('ratio', ratio, 'twidthb4', image.twidth, 'theightb4', image.theight);
+				var $img = $('<img/>')
+					.attr('src', image.thumb)
+					.css({
+						'width'  : image.twidth + 'px',
+						'height' : image.theight + 'px',
+					})
+					.data('image', {
+						'image'   : image.image,
+						'width'   : image.width + 'px',
+						'height'  : image.height + 'px',
+						'thumb'   : image.thumb,
+						'twidth'  : image.twidth + 'px',
+						'theight' : image.theight + 'px',
+						'filesize': image.filesize,
+						'url'     : image.url,
+						'expanded' : false
+					})
+					.appendTo( $a )
+					.slideDown(1000);
+				$('<div/>')
+					.addClass('col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center')
+					.append( $a )
+					.appendTo( $('#album-container') )
+					.click(function(e) {
+						var $img = $(this).find('img');
+						var imgdata = $img.data('image');
+						if (!imgdata.expanded) {
+							// Expand image
+							$(this).find('a div.caption')
+								.append(
+									$('<p/>').append(
+										$('<a/>')
+											.attr('href', imgdata.url)
+											.attr('target', '_BLANK_' + imgdata.url)
+											.attr('rel', 'noreferrer')
+											.click(function(e) { window.open(imgdata.url); return false; })
+											.html(imgdata.url)
+									)
+								);
+							$(this)
+								.removeClass('col-xs-12 col-sm-6 col-md-4 col-lg-3')
+								.addClass('col-xs-12');
+							$img
+								.attr('src', imgdata.image)
+								.stop()
+								.animate({
+									'width'  : imgdata.width,
+									'height' : imgdata.height
+								}, 500);
+						} else {
+							// Unexpand image
+							$(this).find('a div.caption p').remove();
+							$(this)
+								.removeClass('col-xs-12')
+								.addClass('col-xs-12 col-sm-6 col-md-4 col-lg-3');
+							$img
+								.attr('src', imgdata.thumb)
+								.stop()
+								.animate({
+									'width'  : imgdata.twidth,
+									'height' : imgdata.theight
+								}, 500);
+						}
+						imgdata.expanded = !imgdata.expanded;
+						$('html,body').stop().animate({ 'scrollTop': $img.offset().top - $('div.navbar').height() }, 500);
+						return false;
+					});
+				$('<div class="caption"/>')
+					.html(image.width + '<small>x</small>' + image.height + ' (' + image.filesize + ')')
+					.appendTo( $a );
+							
+						
+			}
+			$('#album-container').show();
+			setTimeout(function() {
+				$('#album-container').data('album').loading = false;
+			}, 500);
+		});
 }
 
 function getSpinner() {
@@ -70,7 +235,6 @@ function startRip(baseurl) {
 		.done(function(json) {
 			$('#button-rip-album').removeData('ajax');
 			if ('error' in json) {
-				// TODO handle error
 				$('#status-rip-album')
 					.addClass('text-danger')
 					.html(json.error);
@@ -115,10 +279,23 @@ function abortRip() {
 
 /** Hide current page, show page with 'id' */
 function showPage(id) {
+	if ( $('body [id^="page-"]:visible').attr('id') === id) {
+		// Page is already showing
+		// Scroll up
+		$('html,body').stop().animate({ 'scrollTop': 0 }, 500);
+		return;
+	}
 	// Hide current page(s)
 	$('body [id^="page-"]:visible')
 		.stop()
-		.fadeOut(200);
+		.slideUp(200, function() {
+			// Show the page
+			$('#' + id)
+				.stop()
+				.hide()
+				.slideDown(500);
+		});
+
 	// Deselect nav-bar
 	$('a[id^="nav-"]').parent().removeClass('active');
 	// Hide drop-down navbar (xs view)
@@ -127,11 +304,6 @@ function showPage(id) {
 	}
 	// Scroll up
 	$('html,body').stop().animate({ 'scrollTop': 0 }, 500);
-	// Show the page
-	$('#' + id)
-		.stop()
-		.hide()
-		.fadeIn(500);
 }
 
 /* Convert keys in hash to JS object */
@@ -203,6 +375,7 @@ function setupExamples() {
 function setupRipper() {
 	$('#button-rip-album')
 		.click(function() {
+			$('#text-rip-album').blur();
 			var url = $('#text-rip-album').val();
 			url = url.replace(/https?:\/\/(www\.)/, '');
 			window.location.hash = url;

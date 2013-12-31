@@ -9,9 +9,12 @@ body {
 }
 
 a {
-  color: #000000;
+  color: #fff;
 	cursor: pointer;
 } 
+a:hover {
+	color: #ccc;
+}
 
 p {
   font-size: 16px;
@@ -315,4 +318,16 @@ h1.title {
 }
 .text-warning, .text-warning:hover {
 	color: #f90;
+}
+
+.album-key {
+	font-weight: bold;
+}
+.album-value {
+	font-size: 0.9em;
+}
+
+.caption {
+	color: #fff !important;
+	font-size: 0.9em;
 }

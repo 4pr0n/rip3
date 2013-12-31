@@ -17,6 +17,8 @@ def main():
 	if   method == 'get_rips_by_user':   return get_rips_by_user(keys)
 	elif method == 'count_rips_by_user': return count_rips_by_user(keys)
 	elif method == 'rip_album':          return rip_album(keys)
+	elif method == 'get_album_info':     return get_album_info(keys)
+	elif method == 'get_album':          return get_album(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -54,6 +56,74 @@ def rip_album(keys):
 	except Exception, e:
 		return err(str(e), tb=format_exc())
 
+def get_album_info(keys):
+	if not 'album' in keys:
+		return err('album required')
+	q = '''
+		select 
+			name, url, host, ready, filesize, created, modified, count, zip, views, metadata
+		from albums
+		where path like ?
+	'''
+	from py.DB import DB
+	db = DB()
+	cur = db.conn.cursor()
+	curexec = cur.execute(q, [ keys['album'] ])
+	one = curexec.fetchone()
+	if one == None:
+		return err('album not found')
+	(name, url, host, ready, filesize, created, modified, count, zipfile, views, metadata) = one
+	response = {
+		'album_name' : name,
+		'url' : url,
+		'host' : host,
+		'ready' : ready == 1,
+		'filesize' : filesize,
+		'created' : created,
+		'modified' : modified,
+		'count' : count,
+		'zip' : zipfile,
+		'views' : views,
+		'metadata' : metadata
+	}
+	return response
+
+def get_album(keys):
+	if not 'album' in keys:
+		return err('album required')
+	start = int(keys.get('start', '0'))
+	count = int(keys.get('count', '10'))
+	q = '''
+		select
+			i_index, medias.url, valid, error, type, image_name, width, height, medias.filesize, thumb_name, t_width, t_height, medias.metadata, albums.path
+		from medias inner join albums on medias.album_id = albums.rowid
+		where albums.path like ?
+		order by i_index asc
+		limit %d
+		offset %d
+	''' % (count, start)
+	from py.DB import DB
+	db = DB()
+	cur = db.conn.cursor()
+	curexec = cur.execute(q, [ keys['album'] ])
+	response = []
+	for (index, url, valid, error, filetype, name, width, height, filesize, thumb, twidth, theight, metadata, path) in curexec:
+		response.append({
+			'index'    : index,
+			'url'      : url,
+			'valid'    : valid == 1,
+			'error'    : error,
+			'type'     : filetype,
+			'image'    : 'rips/%s/%s' % (path, name),
+			'width'    : width,
+			'height'   : height,
+			'filesize' : filesize,
+			'thumb'    : 'rips/%s/thumbs/%s' % (path, thumb),
+			'twidth'   : twidth,
+			'theight'  : theight,
+			'metadata' : metadata
+		})
+	return response
 
 ###################
 # HELPER METHODS
