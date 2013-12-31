@@ -11,7 +11,7 @@ from calendar  import timegm
 from threading import Thread
 from traceback import format_exc
 
-MAX_THREADS = 1
+MAX_THREADS = 3
 
 class RipManager(object):
 

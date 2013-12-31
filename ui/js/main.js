@@ -58,12 +58,9 @@ function loadAlbum(album) {
 		.data('album', {
 			'album' : album,
 			'start' : 0,
-			'count' : 12
+			'count' : 12,
 		})
-		.slideUp(200, 
-			function() { 
-				$(this).empty()
-			});
+		.empty();
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -76,20 +73,27 @@ function loadAlbum(album) {
 			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
 			$('#album-info-source').html(json.url);
 			$('#album-info-download').html(json.zip);
-			$('#album-info-size').html(json.count + ' images <small><b>' + json.filesize + 'b</b></small>');
+			$('#album-info-size').html(json.count + ' images <small>(' + bytesToHR(json.filesize) + ')</small>');
 			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
+			$('#album-container').data('album')['total_count'] = json.count;
 		});
-	loadAlbumImages(album);
+	loadAlbumImages();
 }
 
-function loadAlbumImages(album) {
+function loadAlbumImages() {
 	var albumdata = $('#album-container').data('album');
-	if (albumdata.loading) return;
+	if (albumdata.loading || albumdata.loaded) return;
 	albumdata.loading = true;
 	if (albumdata.start === undefined) albumdata.start = 0;
 	if (albumdata.count === undefined) albumdata.count = 12;
+	var params = {
+		method : 'get_album',
+		album  : encodeURIComponent(albumdata.album),
+		start  : albumdata.start,
+		count  : albumdata.count
+	}
 	albumdata.start += albumdata.count;
-	$.getJSON('api.cgi?method=get_album&album=' + encodeURIComponent(album) + '&start=' + albumdata.start + '&count=' + albumdata.count)
+	$.getJSON('api.cgi?' + $.param(params))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
 			if ('error' in json) {
@@ -100,30 +104,13 @@ function loadAlbumImages(album) {
 			var image;
 			for (var i in json) {
 				image = json[i];
-				/*
-				'index'    : index,
-				'url'      : url,
-				'valid'    : valid == 1,
-				'error'    : error,
-				'type'     : filetype,
-				'image'    : name,
-				'width'    : width,
-				'height'   : height,
-				'size'     : filesize,
-				'thumb'    : thumb,
-				'twidth'   : twidth,
-				'theight'  : theight,
-				'metadata' : metadata
-				*/
 				var $a = $('<a/>')
 					.attr('href', image.image)
 					.css('background-color', 'rgba(0,0,0,0.0)')
 					.addClass('thumbnail');
 				var ratio = 200 / image.theight;
-				console.log('ratio', ratio, 'twidthb4', image.twidth, 'theightb4', image.theight);
 				image.theight *= ratio;
 				image.twidth *= ratio;
-				console.log('ratio', ratio, 'twidthb4', image.twidth, 'theightb4', image.theight);
 				var $img = $('<img/>')
 					.attr('src', image.thumb)
 					.css({
@@ -194,10 +181,14 @@ function loadAlbumImages(album) {
 				$('<div class="caption"/>')
 					.html(image.width + '<small>x</small>' + image.height + ' (' + image.filesize + ')')
 					.appendTo( $a );
-							
-						
 			}
-			$('#album-container').show();
+			if (albumdata.total_count !== undefined && 
+			    albumdata.total_count <= albumdata.start) {
+				// Done loading this album
+				$('#album-status')
+					.html(albumdata.total_count + ' items loaded');
+				albumdata.loaded = true;
+			}
 			setTimeout(function() {
 				$('#album-container').data('album').loading = false;
 			}, 500);
@@ -298,6 +289,7 @@ function showPage(id) {
 
 	// Deselect nav-bar
 	$('a[id^="nav-"]').parent().removeClass('active');
+	$('a[id^="nav-' + id.split('-')[1] + '"]').parent().addClass('active');
 	// Hide drop-down navbar (xs view)
 	if ( $('.navbar-collapse').hasClass('in') ) {
 		$('.navbar-toggle').click();
@@ -387,3 +379,16 @@ function setupRipper() {
 			}
 		});
 }
+
+function bytesToHR(bytes) {
+	var units = ['g', 'm', 'k', ''];
+	var chunk = 1024 * 1024 * 1024;
+	for (var unit in units) {
+		if (bytes >= chunk) {
+			return (bytes / chunk).toFixed(2) + units[unit] + 'b';
+		}
+		chunk /= 1024;
+	}
+	return '?b';
+}
+

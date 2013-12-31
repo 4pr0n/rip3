@@ -239,7 +239,7 @@ input[type="color"],
 .navbar .nav > .active > a,
 .navbar .nav > .active > a:hover,
 .navbar .nav > .active > a:focus {
-  color: #555555;
+  color: #fff;
 }
 
 .label,
@@ -330,4 +330,9 @@ h1.title {
 .caption {
 	color: #fff !important;
 	font-size: 0.9em;
+}
+
+#album-status {
+	text-align: center;
+	font-size: 1.2em;
 }
