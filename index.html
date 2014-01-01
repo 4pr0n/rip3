@@ -115,7 +115,15 @@
 		</div> <!-- /#page-rip -->
 
 		<!-- Albums page (multiple) -->
-		<div id="page-albums" class="container" style="display: none">
+		<div id="page-albums" style="display: none">
+			<div class="jumbotron">
+				<div class="container text-center">
+					<h1 class="title">ripped albums</h1>
+					<p> these albums are kept for only a short time and may be deleted at any time
+				</div> <!-- /container -->
+			</div> <!-- /jumbotron -->
+			<div class="container" id="albums-container">
+			</div> <!-- /#album-container -->
 		</div> <!-- /#page-albums -->
 
 		<!-- Albums page (singular) -->
@@ -128,19 +136,19 @@
 					</h1>
 					<p>
 					<span class="album-key">source:</span>
-					<span class="album-value" id="album-info-source">http://asdf.com</span>
+					<span class="album-value" id="album-info-source"></span>
 					<p>
 					<span class="album-key">download:</span>
-					<span class="album-value" id="album-info-download">http://asdf.com</span> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">source urls</button> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">mirrored urls</button>
+					<span class="album-value" id="album-info-download"></span> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">source urls</button> <button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">mirrored urls</button>
 					<div id="album-info-urls" style="display: none">
 						<textarea class="input-sm" id="album-info-urls-text" rows="20" style="width: 100%"></textarea>
 					</div>
 					<p>
 					<span class="album-key">size:</span>
-					<span class="album-value" id="album-info-size">10</span>
+					<span class="album-value" id="album-info-size"></span>
 					<p>
 					<span class="album-key">created:</span>
-					<span class="album-value" id="album-info-created">2013-12-30 12:30</span>
+					<span class="album-value" id="album-info-created"></span>
 					<div id="album-progress-container" style="display: none">
 						<h2>ripping progress</h2>
 						<p>

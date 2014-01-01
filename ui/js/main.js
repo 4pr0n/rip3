@@ -19,7 +19,7 @@ function pageChanged() {
 	else if ('removal' in keys) { showPage('page-about-removal'); }
 	else if ('code'    in keys) { showPage('page-about-code'); }
 	else if ('albums'  in keys) {
-		showPage('page-albums');
+		loadAlbums();
 		// TODO Load albums
 	}
 	else if ('album' in keys) {
@@ -37,6 +37,80 @@ function pageChanged() {
 		$('#button-rip-album, #text-rip-album').removeAttr('disabled');
 		$('#status-rip-album').html('');
 	}
+}
+
+function albumsScrollHandler() {
+	var page     = $(document).height(); // Height of document
+	var viewport = $(window).height();   // Height of viewing window
+	var scroll   = $(document).scrollTop() || window.pageYOffset; // Scroll position (top)
+	var remain = page - (viewport + scroll);
+	if (viewport > page || // Viewport is bigger than entire page
+	    remain < 300) {    // User has scrolled down far enough
+		loadMoreAlbums();
+	}
+}
+
+function loadAlbums(params) {
+	showPage('page-albums');
+	$(window)
+		.unbind('scroll')
+		.scroll(albumsScrollHandler);
+	if (params === undefined) params = {}
+	params.method = 'get_albums';
+	$.getJSON('api.cgi?' + $.param(params))
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if (json === null) { json = {'error' : 'null response'}; }
+			console.log('json', json);
+			if ('error' in json) {
+				// TODO Handle error
+				$('#album-info-name').html(json.error + ' <small>error</small>');
+				throw new Error(json.error);
+			}
+			for (var i in json) {
+				var path;
+				for (path in json[i]) break;
+				var album = json[i][path];
+				addAlbumPreview(path, album);
+			}
+		});
+}
+
+function addAlbumPreview(path, album) {
+	console.log(path, album);
+	var $div = $('<div/>')
+		.addClass('col-xs-12 col-lg-6 well');
+		
+	$('<div/>')
+		.addClass('col-xs-12')
+		.append( $('<h3/>').html(
+				'<span class="albums-name">' + album.name + '</span>' +
+				' <small class="albums-host">' + album.host + '</small> ' + 
+				' <small class"albums-count">(' + album.count + ' images)</small>')
+			)
+		.appendTo( $div );
+
+	for (var i in album.preview) {
+		var image = album.preview[i];
+		$('<div/>')
+			.addClass('col-xs-12 col-sm-6 col-md-3 thumbnail')
+			.append(
+				$('<img/>')
+					.attr('src', image.thumb)
+					.css({
+						'width'  : image.t_width,
+						'height' : image.t_height
+					})
+				)
+			.appendTo($div);
+	}
+	$div
+		.appendTo( $('#albums-container') )
+		.hide()
+		.slideDown(200);
+}
+function loadMoreAlbums() {
+	
 }
 
 function albumScrollHandler() {

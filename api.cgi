@@ -22,6 +22,7 @@ def main():
 	elif method == 'get_album':          return get_album(keys)
 	elif method == 'get_album_urls':     return get_album_urls(keys)
 	elif method == 'generate_zip':       return generate_zip(keys)
+	elif method == 'get_albums':         return get_albums(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -198,6 +199,89 @@ def get_album_urls(keys):
 	cur.close()
 	return result
 
+def get_albums(keys):
+	start   = int(keys.get('start', '0'))
+	count   = int(keys.get('count', '6'))
+	preview = int(keys.get('preview', '4'))
+
+	host    = keys.get('host', None)
+	author  = keys.get('author', None)
+
+	orderby = keys.get('order', None)
+	ascdesc = keys.get('sort', None)
+
+	wheres = []
+	values = []
+	if host != None:
+		wheres.append('host like ?')
+		values.append(host)
+	if author != None:
+		wheres.append('author like ?')
+		values.append(author)
+	where = ''
+	if len(wheres) > 0:
+		where = 'where %s' % ' AND '.join(wheres)
+
+	if orderby == None or orderby not in ['accessed', 'created', 'host', 'reports', 'count', 'views']:
+		orderby = 'accessed'
+		ascdesc = 'desc'
+	else:
+		if ascdesc == None or ascdesc not in ['asc', 'desc']:
+			ascdesc = 'desc'
+	q = '''
+		select
+			a.host, a.name, a.path, a.count, a.zip, a.reports,
+			type, image_name, width, height, thumb_name, t_width, t_height
+		from 
+			(select
+					rowid, host, name, path, count, zip, reports, accessed, modified, created, host, reports, count, views
+				from 
+					albums 
+				%s
+				order by %s %s
+				limit %d
+				offset %d
+			) as a
+				inner join
+			medias
+				on medias.album_id = a.rowid
+			where i_index <= %d and medias.valid = 1
+	''' % (where, orderby, ascdesc, count, start, preview)
+	from py.DB import DB
+	db = DB()
+	cursor = db.conn.cursor()
+	curexec = cursor.execute(q, values)
+	result = []
+	for (host, name, path, count, zipfile, reports, mediatype, image, w, h, thumb, tw, th) in curexec:
+		d = get_key_from_dict_list(result, path)
+		if not 'preview' in d[path]:
+			d[path] = {
+				'host' : host,
+				'name' : name,
+				'count' : count,
+				'zip' : zipfile,
+				'reports' : reports,
+				'preview' : []
+			}
+		d[path]['preview'].append({
+				'image' : '/'.join(['rips', path, image]),
+				'type' : mediatype,
+				'width' : w,
+				'height' : h,
+				'thumb' : '/'.join(['rips', path, 'thumbs', thumb]),
+				't_width' : tw,
+				't_height' : th
+			})
+	return result
+
+def get_key_from_dict_list(lst, key):
+	for d in lst:
+		if key in d:
+			return d
+	d = {key: {} }
+	lst.append(d)
+	return d
+
 def generate_zip(keys):
 	if not 'album' in keys:
 		return err('album required')
@@ -260,7 +344,8 @@ def get_keys(): # Get query keys
 	form = FieldStorage()
 	keys = {}
 	for key in form.keys():
-		keys[key] = unquote(form[key].value)
+		if form[key].value != 'undefined':
+			keys[key] = unquote(form[key].value)
 	return keys
 
 """ Returns dict of requester's cookies """
