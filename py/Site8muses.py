@@ -9,34 +9,23 @@ class Site8muses(SiteBase):
 
 	@staticmethod
 	def get_host():
-		'''
-			Returns name of site, no TLD (.com, .net) required
-		'''
 		return '8muses'
 
 	@staticmethod
+	def get_sample_url():
+		return 'http://www.8muses.com/index/category/hotassneighbor7'
+
+	@staticmethod
 	def can_rip(url):
-		'''
-			Checks if this ripper can rip a URL.
-		'''
 		return '8muses.com' in url and '/index/' in url
 
 	def sanitize_url(self):
-		'''
-			Do anything special to the URL before starting.
-		'''
 		return self.url # No sanitization needed
 
 	def get_album_name(self):
-		'''
-			Returns unique album name (unique to this class' host name)
-		'''
 		return self.url.split('/')[-1]
 
 	def get_urls(self):
-		'''
-			Returns list of URLs from album. Does not download them.
-		'''
 		from Httpy import Httpy
 		httpy = Httpy()
 

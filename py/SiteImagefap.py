@@ -9,6 +9,10 @@ class SiteImagefap(SiteBase):
 		return 'imagefap'
 
 	@staticmethod
+	def get_sample_url():
+		return 'http://www.imagefap.com/pictures/3802288/asdf'
+
+	@staticmethod
 	def can_rip(url):
 		return 'imagefap.com' in url and \
 		   ('/pictures/' in url or \
@@ -48,7 +52,6 @@ class SiteImagefap(SiteBase):
 	@staticmethod
 	def test():
 		url = 'http://www.imagefap.com/pictures/3802288/asdf'
-		#url = 'http://www.imagefap.com/gallery.php?gid=3802288'
 		s = SiteImagefap(url)
 		urls = s.get_urls()
 		expected = 10
@@ -56,8 +59,4 @@ class SiteImagefap(SiteBase):
 			raise Exception('expected %d images, got %d. url: %s' % (expected, len(urls), url))
 
 if __name__ == '__main__':
-	#SiteImagefap.test()
-	url = 'http://www.imagefap.com/pictures/3802288/asdf'
-	s = SiteImagefap(url)
-	s.start()
-	pass
+	SiteImagefap.test()

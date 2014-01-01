@@ -9,44 +9,34 @@ class SiteAnonib(SiteBase):
 
 	@staticmethod
 	def get_host():
-		'''
-			Returns name of site, no TLD (.com, .net) required
-		'''
-		return 'hostname'
+		return 'anonib'
+
+	@staticmethod
+	def get_sample_url():
+		return 'http://www.anonib.com/on/res/1284.html'
 
 	@staticmethod
 	def can_rip(url):
-		'''
-			Checks if this ripper can rip a URL.
-		'''
-		return 'hostname.com' in url and '/some_folder/' in url
+		return 'anonib.com' in url and '/res/' in url
 
 	def sanitize_url(self):
-		'''
-			Do anything special to the URL before starting.
-		'''
+		self.url = self.url.replace('+50.html', '.html').replace('-100.html', '.html')
 		return self.url # No sanitization needed
 
 	def get_album_name(self):
-		'''
-			Returns unique album name (unique to this class' host name)
-		'''
-		return self.url.split('/')[-1]
+		# http://www.anonib.com/on/res/1284+50.html
+		#   0  1        2       3   4      5
+		fields = self.url.split('/')
+		return '%s-%s' % (fields[3], fields[5].replace('.html', ''))
 
 	def get_urls(self):
-		'''
-			Returns list of URLs from album. Does not download them.
-		'''
 		from Httpy import Httpy
 		httpy = Httpy()
 
 		r = httpy.get(self.url)
 		result = []
-		for link in httpy.between(r, '<img src="', '"'):
-			link = 'http://hostname.com%s' % link
+		for link in httpy.between(r, '/img.php?path=', '"'):
 			result.append(link)
-			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
-				break
 		return result
 
 	@staticmethod
@@ -59,18 +49,19 @@ class SiteAnonib(SiteBase):
 		httpy = Httpy()
 
 		# Check we can hit the host
-		url = 'http://hostname.com'
+		url = 'http://anonib.com'
 		r = httpy.get(url)
 		if len(r.strip()) == 0:
 			raise Exception('unable to retrieve data from %s' % url)
 
 		# Check ripper gets all images in an album
-		url = 'http://hostname.com/some_folder/gallery1'
-		s = _SampleSite(url)
+		
+		url = 'http://www.anonib.com/on/res/1284+50.html'
+		s = SiteAnonib(url)
 		urls = s.get_urls()
-		expected = 10
-		if len(urls) != expected:
+		expected = 35
+		if len(urls) < expected:
 			raise Exception('expected %d images, got %d. url: %s' % (expected, len(urls), url))
 
 if __name__ == '__main__':
-	_SampleSite.test()
+	SiteAnonib.test()

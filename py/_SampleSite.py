@@ -21,6 +21,13 @@ class _SampleSite(SiteBase):
 		'''
 		return 'hostname.com' in url and '/some_folder/' in url
 
+	@staticmethod
+	def get_sample_url():
+		'''
+			Sample URL to display and use for testing
+		'''
+		return 'http://hostname.com/index'
+
 	def sanitize_url(self):
 		'''
 			Do anything special to the URL before starting.

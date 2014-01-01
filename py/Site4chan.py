@@ -10,34 +10,26 @@ class Site4chan(SiteBase):
 
 	@staticmethod
 	def get_host():
-		'''
-			Returns name of site, no TLD (.com, .net) required
-		'''
 		return '4chan'
 
 	@staticmethod
+	def get_sample_url():
+		return 'http://api.4chan.org/r/res/11975234'
+
+	@staticmethod
 	def can_rip(url):
-		'''
-			Checks if this ripper can rip a URL.
-		'''
 		# Expecting http[s]://[boards.]4chan.org/(board)/res/(thread)
 		return '4chan.org/' in url and \
 		       '/res/'      in url and \
 		       len(url.split('/')) > 5
 
 	def get_album_name(self):
-		'''
-			Returns unique album name (unique to this class' host name)
-		'''
 		fields = self.url.split('/')
 		# http://boards.4chan.org/b/res/523200202
 		#   0  1         2        3  4      5
 		return '%s-%s' % (fields[3], fields[5])
 
 	def get_urls(self):
-		'''
-			Returns list of URLs from album. Does not download them.
-		'''
 		from Httpy import Httpy
 		httpy = Httpy()
 
@@ -97,7 +89,6 @@ class Site4chan(SiteBase):
 			raise Exception('failed to load %s: %s' % (url, str(e)))
 
 		url = 'http://boards.4chan.org/r/res/%d' % number
-		url = 'http://api.4chan.org/r/res/11975234'
 		s = Site4chan(url)
 		urls = s.get_urls()
 		if len(urls) == 0:
