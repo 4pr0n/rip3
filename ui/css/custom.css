@@ -344,3 +344,15 @@ h1.title {
 .thumbnail {
 	background-color: rgba(0, 0, 0, 0.0) !important;
 }
+
+.thumbnail {
+	border: none !important;
+	cursor: pointer;
+}
+.thumbnail:hover {
+	background-color: #999 !important;
+}
+
+.albums-name, .albums-host, .albums-count {
+	white-space: nowrap;
+}

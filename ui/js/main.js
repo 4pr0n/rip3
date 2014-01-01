@@ -79,21 +79,24 @@ function loadAlbums(params) {
 function addAlbumPreview(path, album) {
 	console.log(path, album);
 	var $div = $('<div/>')
-		.addClass('col-xs-12 col-lg-6 well');
+		.addClass('col-xs-12 col-md-6 col-lg-6 text-center well');
 		
 	$('<div/>')
 		.addClass('col-xs-12')
 		.append( $('<h3/>').html(
-				'<span class="albums-name">' + album.name + '</span>' +
+				'<span class="albums-name">' + album.name.replace(' ', '&nbsp;') + '</span>' +
 				' <small class="albums-host">' + album.host + '</small> ' + 
-				' <small class"albums-count">(' + album.count + ' images)</small>')
+				' <small class"albums-count">(' + album.count + '&nbsp;images)</small>')
 			)
 		.appendTo( $div );
 
 	for (var i in album.preview) {
 		var image = album.preview[i];
+		var ratio = 160 / image.t_height;
+		image.t_height *= ratio;
+		image.t_width *= ratio;
 		$('<div/>')
-			.addClass('col-xs-12 col-sm-6 col-md-3 thumbnail')
+			.addClass('col-xs-12 col-sm-3 col-md-6 col-lg-3 thumbnail')
 			.append(
 				$('<img/>')
 					.attr('src', image.thumb)
