@@ -180,6 +180,7 @@ function loadMoreAlbums() {
 			if (json.length < params.count) {
 				// We got empty/partial response. Means we're done
 				$('#page-albums').data('params').finished = true;
+				$(window).unbind('scroll');
 			}
 			$('#albums-status')
 				.html('loaded ' + (params.start - (params.count - json.length)) + ' albums');
@@ -429,6 +430,7 @@ function loadAlbumImages() {
 				$('#album-status')
 					.html(albumdata.total_count + ' items loaded');
 				albumdata.loaded = true;
+				$(window).unbind('scroll');
 			}
 			setTimeout(function() {
 				$('#album-container').data('album').loading = false;
