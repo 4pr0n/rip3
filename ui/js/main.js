@@ -20,7 +20,6 @@ function pageChanged() {
 	else if ('code'    in keys) { showPage('page-about-code'); }
 	else if ('albums'  in keys) {
 		loadAlbums();
-		// TODO Load albums
 	}
 	else if ('album' in keys) {
 		loadAlbum(keys.album);
@@ -39,47 +38,32 @@ function pageChanged() {
 	}
 }
 
-function albumsScrollHandler() {
-	var page     = $(document).height(); // Height of document
-	var viewport = $(window).height();   // Height of viewing window
-	var scroll   = $(document).scrollTop() || window.pageYOffset; // Scroll position (top)
-	var remain = page - (viewport + scroll);
-	if (viewport > page || // Viewport is bigger than entire page
-	    remain < 300) {    // User has scrolled down far enough
-		loadMoreAlbums();
-	}
-}
-
-function loadAlbums(params) {
+function loadAlbums() {
 	showPage('page-albums');
+	var scrollTop = $('#page-albums').data('scroll');
+	if (scrollTop !== undefined) {
+		$('html,body')
+			.animate({
+				'scrollTop': scrollTop,
+			}, 200);
+	}
+
 	$(window)
 		.unbind('scroll')
 		.scroll(albumsScrollHandler);
-	if (params === undefined) params = {}
-	params.method = 'get_albums';
-	$.getJSON('api.cgi?' + $.param(params))
-		.fail(function() { /* TODO */ })
-		.done(function(json) {
-			if (json === null) { json = {'error' : 'null response'}; }
-			console.log('json', json);
-			if ('error' in json) {
-				// TODO Handle error
-				$('#album-info-name').html(json.error + ' <small>error</small>');
-				throw new Error(json.error);
-			}
-			for (var i in json) {
-				var path;
-				for (path in json[i]) break;
-				var album = json[i][path];
-				addAlbumPreview(path, album);
-			}
-		});
+	albumsScrollHandler();
 }
 
 function addAlbumPreview(path, album) {
-	console.log(path, album);
 	var $div = $('<div/>')
-		.addClass('col-xs-12 col-md-6 col-lg-6 text-center well');
+		.addClass('col-xs-12 col-md-6 col-lg-6 text-center well album-preview')
+		.data('album', path)
+		.click(function() {
+			// Save current scroll location
+			$('#page-albums').data('scroll', $(window).scrollTop());
+			// View album
+			window.location.hash = 'album=' + $(this).data('album');
+		});
 		
 	$('<div/>')
 		.addClass('col-xs-12')
@@ -105,15 +89,108 @@ function addAlbumPreview(path, album) {
 						'height' : image.t_height
 					})
 				)
-			.appendTo($div);
+			.appendTo($div)
+			.data('image', image)
+			.click(function(e) {
+				e.stopPropagation();
+				var img = $(this).data('image');
+				var w = img.width, h = img.height;
+				var ratio = $(window).width() / img.width;
+				w *= ratio; h *= ratio;
+				$('#albums-image')
+					.css({
+						width: w,
+						height: h
+					});
+				var $full = $('<img/>')
+					.css({
+						'width': '100%',
+						'height': '100%'
+					})
+					.attr('src', img.image)
+				$('#albums-image')
+					.empty()
+					.append( $full )
+					.stop()
+					.slideDown(500)
+					.click(function() {
+						$(this)
+							.stop()
+							.slideUp(200, 
+								function() { 
+									$(this).css({
+										'width': '',
+										'height': ''
+									});
+							})
+					});
+			});
 	}
 	$div
 		.appendTo( $('#albums-container') )
 		.hide()
 		.slideDown(200);
 }
+
+function albumsScrollHandler() {
+	var page     = $(document).height(); // Height of document
+	var viewport = $(window).height();   // Height of viewing window
+	var scroll   = $(document).scrollTop() || window.pageYOffset; // Scroll position (top)
+	var remain = page - (viewport + scroll);
+	if (viewport > page || // Viewport is bigger than entire page
+	    remain < 300) {    // User has scrolled down far enough
+		loadMoreAlbums();
+	}
+}
+
 function loadMoreAlbums() {
-	
+	var loading = $('#page-albums').data('loading');
+	if (loading !== undefined && loading) {
+		// Currently waiting for more albums to load, don't try to load more
+		return;
+	}
+	var params = $('#page-albums').data('params');
+	if (params === undefined) {
+		params = {
+			'start': 0,
+			'count': 6,
+			'method': 'get_albums'
+		};
+	}
+	if (params.finished !== undefined) {
+		// Hit end of albums
+		return;
+	}
+	$('#page-albums').data('loading', true);
+	$.getJSON('api.cgi?' + $.param(params))
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if (json === null) { json = {'error' : 'null response'}; }
+			if ('error' in json) {
+				// TODO Handle error
+				$('#album-info-name').html(json.error + ' <small>error</small>');
+				throw new Error(json.error);
+			}
+			for (var i in json) {
+				var path;
+				for (path in json[i]) break; // Get first (only) key
+				var album = json[i][path];
+				addAlbumPreview(path, album);
+			}
+			if (json.length < params.count) {
+				// We got empty/partial response. Means we're done
+				$('#page-albums').data('params').finished = true;
+			}
+			$('#albums-status')
+				.html('loaded ' + (params.start - (params.count - json.length)) + ' albums');
+			setTimeout(function() {
+				$('#page-albums').data('loading', false);
+				albumsScrollHandler();
+			}, 500);
+		});
+	// Set next value
+	params.start += params.count;
+	$('#page-albums').data('params', params);
 }
 
 function albumScrollHandler() {
@@ -458,7 +535,6 @@ function showPage(id) {
 	if ( $('.navbar-collapse').hasClass('in') ) {
 		$('.navbar-toggle').click();
 	}
-	// Scroll up
 	$('html,body').stop().animate({ 'scrollTop': 0 }, 500);
 }
 
