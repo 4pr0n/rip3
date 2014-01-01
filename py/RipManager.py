@@ -18,35 +18,44 @@ class RipManager(object):
 	def __init__(self):
 		self.db = DB()
 		self.httpy = Httpy()
-		self.results = [None] * MAX_THREADS
+		self.current_threads = []
+		self.results = []
 
 	def start(self):
+		print 'MAIN: starting infinite loop...'
+		already_printed_sleep_msg = False
 		while True:
 			sleep(0.1)
 			if len(self.results) > 0:
+				# self.results is the list of downloaded medias to be added to the DB
 				result = self.results.pop()
-				# Parse result
-				if result != None:
-					self.handle_result(result)
+				self.handle_result(result)
+
+			try:
 				# Get next URL to retrieve
-				try:
-					url = self.get_next_url()
-				except Exception, e:
-					self.results.append(None)
-					if str(e) == 'no URLs found':
-						print 'no urls to get, sleeping 500ms'
-						sleep(0.5)
-					else:
-						print str(e), format_exc()
-					continue
-				# Create new thread
-				args = (url,)
-				print 'handling: %s' % str(url)
-				t = Thread(target=self.retrieve_result_from_url, args=args)
-				t.start()
-			else:
-				print 'empty, sleeping 500ms'
-				sleep(0.5)
+				url = self.get_next_url()
+			except Exception, e:
+				if str(e) == 'no URLs found':
+					if not already_printed_sleep_msg:
+						already_printed_sleep_msg = True
+						print 'MAIN: no urls to get, sleeping 500ms'
+					sleep(0.5)
+				else:
+					print 'MAIN: get_next_url(): Exception: %s:\n%s' % (str(e), format_exc())
+				continue
+
+			# We have a URL to download & add to DB (url)
+			already_printed_sleep_msg = False
+			# Wait for thread count to drop
+			while len(self.current_threads) >= MAX_THREADS:
+				sleep(0.1)
+			self.current_threads.append(None)
+			# Create new thread to download the media, add to self.results
+			print 'MAIN: %s #%d: launching handler for: %s' % (url['path'], url['i_index'], url['url'])
+			args = (url,)
+			t = Thread(target=self.retrieve_result_from_url, args=args)
+			t.start()
+			# Thread will pop one out of self.current_threads when completed
 
 	def handle_result(self, result):
 		# Insert result into DB
@@ -67,14 +76,20 @@ class RipManager(object):
 			result['metadata']
 		)
 		self.db.insert('medias', values)
-		if self.db.count('urls', 'album_id = ?', [result['album_id']]) == 0:
-			# No more URLs to retrieve
-			album_id = result['album_id']
-			filesize = self.db.select_one('sum(filesize)', 'medias', 'album_id = ?', [album_id])
-			count = self.db.count('medias', 'album_id = ?', [album_id])
-			now = timegm(gmtime())
-			self.db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ?, accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
 		self.db.commit()
+
+		# Check if this was the last media to add to DB
+		album_id = result['album_id']
+		medias_count = self.db.count('medias', 'album_id = ?', [album_id])
+		album_count = self.db.select_one('count', 'albums', 'rowid = ?', [album_id])
+		if medias_count == album_count:
+			# No more URLs to retrieve, finish up
+			print 'MAIN: %s: completed (total: %d)' % (result['path'], medias_count)
+			filesize = self.db.select_one('sum(filesize)', 'medias', 'album_id = ?', [album_id])
+			now = timegm(gmtime())
+			count = self.db.count('medias', 'album_id = ?', [album_id])
+			self.db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ?, accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
+			self.db.commit()
 
 	def get_next_url(self):
 		# Return next URL to retrieve, removes from DB
@@ -101,17 +116,19 @@ class RipManager(object):
 				'metadata' : metadata,
 				'added'    : added,
 			}
-			break
+			break # We only wanted the first URL (limit is 1 anyway)
 		if url == {}:
 			raise Exception('no URLs found on join')
+
+		# Delete from DB
 		q = 'delete from urls where album_id = ? and i_index = ?'
 		cursor.execute( q, [ url['album_id'], url['i_index'] ] )
-		cursor.close()
 		self.db.commit()
+		cursor.close()
 		return url
 
 	def retrieve_result_from_url(self, url):
-		# URL contains album_id, index, url, type, path, and saveas
+		# url contains album_id, index, url, type, path, and saveas
 
 		# TODO logging into dirname/log.txt
 
@@ -130,7 +147,8 @@ class RipManager(object):
 			'thumb_name': None, #
 			't_width'   : 0,    #
 			't_height'  : 0,    #
-			'metadata'  : url['metadata']
+			'metadata'  : url['metadata'],
+			'path'      : url['path']
 		}
 
 		# Create save dir as needed
@@ -140,18 +158,62 @@ class RipManager(object):
 		# Generate save path
 		saveas = path.join(dirname, url['saveas'])
 		if path.exists(saveas):
+			print 'THREAD: %s: removing existing file %s' % (url['path'], saveas)
 			remove(saveas)
 
-		# TODO get metadata on image, enforce type.
-		# if (404) or (imgur and size=503), don't bother downloading
+		meta = self.httpy.get_meta(url['url'])
+
+		if 'imgur.com' in url['url'] and 'Content-length' in meta and meta['Content-length'] == '503':
+			print 'THREAD: %s: imgur image was not found (503b) at %s' % (url['path'], url['url'])
+			result['error'] = 'imgur image was not found (503b) at %s' % url['url']
+			self.results.append(result)
+			return
+
+		if 'Content-type' in meta and 'html' in meta['Content-Type'].lower():
+			print 'THREAD: %s: url returned HTML content-type at %s' % (url['path'], url['url'])
+			result['error'] = 'url returned HTML content-type at %s' % url['url']
+			self.results.append(result)
+			return
+
+		if meta['content-type'].lower().endswith('png'):
+			# image/png
+			result['type'] = 'image'
+			if not saveas.lower().endswith('png'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'png'
+		elif meta['content-type'].lower().endswith('jpeg') or meta['content-type'].lower().endswith('jpg'):
+			# image/jpg
+			result['type'] = 'image'
+			if not saveas.lower().endswith('jpg'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'jpg'
+		elif meta['content-type'].lower().endswith('gif'):
+			# image/gif
+			result['type'] = 'image'
+			if not saveas.lower().endswith('gif'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'gif'
+		elif meta['content-type'].lower().endswith('mp4'):
+			# video/mp4
+			result['type'] = 'video'
+			if not saveas.lower().endswith('mp4'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'mp4'
+		elif meta['content-type'].lower().endswith('flv'):
+			# video/flv
+			result['type'] = 'video'
+			if not saveas.lower().endswith('flv'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'flv'
+		elif meta['content-type'].lower().endswith('wmv'):
+			# video/wmv
+			result['type'] = 'video'
+			if not saveas.lower().endswith('wmv'):
+				saveas = saveas[:saveas.rfind('.')+1] + 'wmv'
 
 		# Attempt to dowload image at URL
 		try:
 			self.httpy.download(url['url'], saveas)
 		except Exception, e:
-			print 'failed to download %s to %s: %s\n%s' % (url['url'], saveas, str(e), str(format_exc()))
+			print 'THREAD: %s: failed to download %s to %s: %s\n%s' % (url['path'], url['url'], saveas, str(e), str(format_exc()))
 			result['error'] = 'failed to download %s to %s: %s\n%s' % (url['url'], saveas, str(e), str(format_exc()))
 			self.results.append(result)
+			self.current_threads.pop()
 			return
 
 		# Save image info
@@ -160,9 +222,10 @@ class RipManager(object):
 			(result['width'], result['height']) = ImageUtils.get_dimensions(saveas)
 		except Exception, e:
 			# This fails if we can't identify the image file. Consider it errored
-			print 'failed to identify image file %s from %s: %s\n%s' % (saveas, url['url'], str(e), format_exc())
+			print 'THREAD: %s: failed to identify image file %s from %s: %s\n%s' % (url['path'], saveas, url['url'], str(e), format_exc())
 			result['error'] = 'failed to identify image file %s from %s: %s\n%s' % (saveas, url['url'], str(e), format_exc())
 			self.results.append(result)
+			self.current_threads.pop()
 			return
 
 		# Get thumbnail
@@ -172,13 +235,15 @@ class RipManager(object):
 			(tsaveas, result['t_width'], result['t_height']) = ImageUtils.create_thumbnail(saveas, tsaveas)
 		except Exception, e:
 			# Failed to create thumbnail, use default
+			print 'THREAD: %s: failed to create thumbnail: %s' % (url['path'], str(e))
 			tsaveas = path.join(ImageUtils.get_root(), 'ui', 'images', 'nothumb.png')
 			result['t_width'] = result['t_height'] = 160
 		result['thumb_name'] = path.basename(tsaveas)
 
 		result['valid'] = 1
 		self.results.append(result)
-	
+		self.current_threads.pop()
+
 if __name__ == '__main__':
 	rm = RipManager()
 	rm.start()

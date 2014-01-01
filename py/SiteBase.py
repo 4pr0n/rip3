@@ -23,13 +23,11 @@ class SiteBase(object):
 			# Don't instantiate if we can't rip it
 			raise Exception('ripper (%s) cannot rip URL (%s)' % (self.__class__.__name__, url))
 		self.url = url
+		self.sanitize_url()
 		self.album_name = self.get_album_name()
 		self.db = DB()
 		self.httpy = Httpy()
 
-		# TODO Should this DB-related stuff be moved to start()?
-		#      Do we want to add bogus URLs to the DB? How will we remove them?
-		# This album needs to be in the DB. Get info from the DB if it exists, otherwise add it.
 		try:
 			self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
 			self.path     = self.db.select_one('path',  'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
@@ -68,6 +66,9 @@ class SiteBase(object):
 		'''
 		raise Exception('can_rip() not overridden by inheriting class')
 		
+	def sanitize_url(self):
+		pass # Do nothing, URL is fine.
+
 	def get_album_name(self, url):
 		'''
 			Returns: Name of album unique for this ripper's host
@@ -146,8 +147,9 @@ class SiteBase(object):
 
 		# Add URL to list of urls to be downloaded
 		now = timegm(gmtime())
+		insertmany = []
 		for url_dict in urls:
-			values = [
+			insertmany.append((
 					self.album_id,
 					url_dict['index'],
 					url_dict['url'],
@@ -155,8 +157,13 @@ class SiteBase(object):
 					url_dict['type'],
 					url_dict['metadata'],
 					now
-				]
-			self.db.insert('urls', values)
+				))
+		q = '''
+			insert into urls
+			values (%s)
+		''' % ','.join( '?' * len(insertmany[0]) )
+		cursor = self.db.conn.cursor()
+		cursor.executemany(q, insertmany)
 		self.db.commit()
 
 		return {
