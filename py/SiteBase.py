@@ -69,7 +69,7 @@ class SiteBase(object):
 	def sanitize_url(self):
 		pass # Do nothing, URL is fine.
 
-	def get_album_name(self, url):
+	def get_album_name(self):
 		'''
 			Returns: Name of album unique for this ripper's host
 		'''
@@ -270,6 +270,10 @@ class SiteBase(object):
 		for ripper in SiteBase.iter_rippers():
 			result.append(ripper.get_host())
 		return result
+
+	@staticmethod
+	def get_url_from_path(album):
+		return None
 
 	@staticmethod
 	def update_supported_sites_statuses():

@@ -18,7 +18,8 @@ class SiteImagefap(SiteBase):
 		   ('/pictures/' in url or \
 		    'gid=' in url)
 
-	def get_gid(self, url):
+	@staticmethod
+	def get_gid(url):
 		if '/pictures/' in url:
 			gid = url[url.find('/pictures/')+len('/pictures/'):]
 			if '/' in gid:
@@ -30,10 +31,10 @@ class SiteImagefap(SiteBase):
 		return gid
 
 	def sanitize_url(self):
-		return self.url # No sanitization needed
+		self.url = 'http://www.imagefap.com/gallery.php?gid=%s&view=2' % SiteImagefap.get_gid(self.url) # No sanitization needed
 
 	def get_album_name(self):
-		return self.get_gid(self.url)
+		return SiteImagefap.get_gid(self.url)
 
 	def get_urls(self):
 		from Httpy import Httpy
@@ -48,6 +49,13 @@ class SiteImagefap(SiteBase):
 			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
 				break
 		return result
+
+	@staticmethod
+	def get_url_from_album_path(album):
+		fields = album.split('_')
+		if len(fields) != 2 or fields[0] != SiteImagefap.get_host():
+			return None
+		return 'http://www.imagefap.com/gallery.php?gid=%s&view=2' % fields[1]
 
 	@staticmethod
 	def test():

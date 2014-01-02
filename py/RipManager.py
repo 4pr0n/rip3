@@ -236,7 +236,7 @@ class RipManager(object):
 		except Exception, e:
 			# Failed to create thumbnail, use default
 			print 'THREAD: %s: failed to create thumbnail: %s' % (url['path'], str(e))
-			tsaveas = path.join(ImageUtils.get_root(), 'ui', 'images', 'nothumb.png')
+			tsaveas = '/'.join('ui', 'images', 'nothumb.png')
 			result['t_width'] = result['t_height'] = 160
 		result['thumb_name'] = path.basename(tsaveas)
 

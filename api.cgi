@@ -103,7 +103,10 @@ def get_album_info(keys):
 	curexec = cur.execute(q, [ keys['album'] ])
 	one = curexec.fetchone()
 	if one == None:
-		return err('album not found')
+		# Album does not exist
+		response = err('album not found')
+		response['url'] = get_url_from_path(keys['album'])
+		return response
 	(name, url, host, ready, filesize, created, modified, count, zipfile, views, metadata) = one
 	response = {
 		'album_name' : name,
@@ -359,6 +362,12 @@ def get_cookies():
 		cookies[pairs[0]] = pairs[1]
 	return cookies
 
+def get_url_from_path(path):
+	from py.SiteBase import SiteBase
+	for ripper in SiteBase.iter_rippers():
+		if path.startswith(ripper.get_host()):
+			return ripper.get_url_from_album_path(path)
+	return None
 
 ########################
 # ENTRY POINT

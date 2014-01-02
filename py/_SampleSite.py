@@ -32,7 +32,7 @@ class _SampleSite(SiteBase):
 		'''
 			Do anything special to the URL before starting.
 		'''
-		return self.url # No sanitization needed
+		self.url = self.url.lower() # Example
 
 	def get_album_name(self):
 		'''
@@ -57,6 +57,16 @@ class _SampleSite(SiteBase):
 		return result
 
 	@staticmethod
+	def get_url_from_album_path(album):
+		'''
+			For divining a url based on the album name
+		'''
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != _SampleSite.get_host():
+			return None
+		# Return url of album (if possible)
+
+	@staticmethod
 	def test():
 		'''
 			Test that ripper is working as expected.
@@ -72,12 +82,12 @@ class _SampleSite(SiteBase):
 			raise Exception('unable to retrieve data from %s' % url)
 
 		# Check ripper gets all images in an album
-		url = 'http://hostname.com/some_folder/gallery1'
+		url = _SampleSite.get_sample_url()
 		s = _SampleSite(url)
 		urls = s.get_urls()
 		expected = 10
-		if len(urls) != expected:
-			raise Exception('expected %d images, got %d. url: %s' % (expected, len(urls), url))
+		if len(urls) < expected:
+			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
 
 if __name__ == '__main__':
 	_SampleSite.test()

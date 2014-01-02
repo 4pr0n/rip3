@@ -224,7 +224,16 @@ function loadAlbum(album) {
 			if (json === null) { json = {'error' : 'null response'}; }
 			if ('error' in json) {
 				// TODO Handle error
-				$('#album-info-name').html(json.error + ' <small>error</small>');
+				$('#page-album span, #page-album button').slideUp(200);
+				$('#album-info-name')
+					.html(json.error + ' <small>error</small>')
+					.slideDown(500);
+				if ('url' in json) {
+					// Error contains a 'url'
+					$('#album-info-source')
+						.html(json.url)
+						.slideDown(200);
+				}
 				throw new Error(json.error);
 			}
 			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
@@ -268,10 +277,10 @@ function loadAlbum(album) {
 			$('#album-container').data('album')['total_count'] = json.count;
 			// "Get URLs" buttons
 			setupGetURLs();
+			// Album progress, decides if thumbnails should be loaded
+			checkAlbumProgress(album);
 		});
 
-	// Album progress, decides if thumbnails should be loaded
-	checkAlbumProgress(album);
 }
 
 function checkAlbumProgress(album) {

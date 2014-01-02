@@ -14,6 +14,7 @@ class ImageUtils(object):
 	'''
 	@staticmethod
 	def create_thumbnail(image, saveas):
+		raise Exception('still dont wanna make thumbnail')
 		if image.lower().endswith('.mp4') or \
 		   image.lower().endswith('.flv') or \
 			 image.lower().endswith('.wmv'):
