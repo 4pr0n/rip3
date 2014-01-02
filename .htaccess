@@ -1,0 +1,2 @@
+# Disallow viewing certain filetypes
+RedirectMatch 404 ^.*\.(py|pyc|db|txt|sh)$
