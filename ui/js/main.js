@@ -226,20 +226,33 @@ function loadAlbum(album) {
 				if ('url' in json) {
 					// Error contains a 'url'
 					$('#album-info-source')
-						.html(json.url)
+						.empty()
+						.append(
+							$('<a/>')
+								.attr('href', json.url)
+								.attr('target', '_BLANK_' + json.host + json.album_name)
+								.html(json.url)
+						)
 						.slideDown(200);
 				}
 				throw new Error(json.error);
 			}
-			$('#page-album span, #page-album button, #album-info-name').slideDown(200);
+			$('#album-info-name').slideDown(200);
 			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
-			$('#album-info-source').html(json.url);
+			$('#album-info-source')
+				.empty()
+				.append(
+					$('<a/>')
+						.attr('href', json.url)
+						.attr('target', '_BLANK_' + json.host + json.album_name)
+						.html(json.url)
+				)
 			if (json.zip === undefined || json.zip === null) {
 				/* TODO create zip button */
 				$('#album-info-download').empty();
 				$('<button type="button"/>')
-					.addClass('btn btn-primary btn-xs')
-					.html('generate zip')
+					.addClass('btn btn-success btn-sm')
+					.html('<b>zip</b>')
 					.click(function() {
 						$('#album-info-download')
 							.empty()
@@ -286,6 +299,7 @@ function checkAlbumProgress(album) {
 		.done(function(json) {
 			if (json.completed + json.errored >= json.total) {
 				// Album is completed, show album
+				$('#page-album span, #page-album button, #album-info-name').slideDown(200);
 				$('#album-progress-container').slideUp(200);
 				loadAlbumImages();
 				return;
@@ -294,6 +308,7 @@ function checkAlbumProgress(album) {
 			$('#album-progress-container')
 				.slideDown(200)
 				.data('album', album);
+			$('#album-progress-container span').slideDown(200);
 			var perc = (json.completed / json.total);
 			$('#album-progressbar-completed').css('width', (json.completed * 100/ json.total) + '%');
 			$('#album-progressbar-pending').css('width',   ((json.pending + json.inprogress) * 100 / json.total) + '%');
