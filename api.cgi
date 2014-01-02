@@ -171,7 +171,7 @@ def get_album_urls(keys):
 	if not 'album' in keys:
 		return err('album required')
 	source = keys.get('source', 'rarchives')
-	if source == 'site':
+	if source == 'source':
 		column = 'url'
 	else:
 		column = 'image_name'
@@ -186,7 +186,7 @@ def get_album_urls(keys):
 	curexec = cur.execute(q, [ keys['album'] ])
 	result = []
 	for (url, ) in curexec:
-		if source != 'site':
+		if source != 'source':
 			url = 'http://rip.rarchives.com/rips/%s/%s' % (keys['album'], url)
 		result.append(url)
 	# Also grab pending URLs

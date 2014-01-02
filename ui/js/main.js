@@ -270,7 +270,8 @@ function loadAlbum(album) {
 			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
 			$('#album-container').data('album')['total_count'] = json.count;
 			// "Get URLs" buttons
-			setupGetURLs();
+			setupGetURLs('source',    json.host)
+			setupGetURLs('rarchives', 'rarchives')
 			// Album progress, decides if thumbnails should be loaded
 			checkAlbumProgress(album);
 		});
@@ -307,21 +308,42 @@ function checkAlbumProgress(album) {
 }
 
 /** Sets up "source URLs" and "mirrored URLs" buttons */
-function setupGetURLs() {
-	$('#album-info-urls-source, #album-info-urls-rarchives')
+function setupGetURLs(id, host) {
+	$('#album-info-urls-' + id)
+		.html('urls (' + host + ')')
+		.data('source', host)
+		.data('id', id)
 		.click(function() {
+			if ( $(this).hasClass('active') ) {
+				$(this).removeClass('active');
+				$(this).data('json').abort();
+				$('#album-info-urls').stop().slideUp(200);
+				return;
+			}
+			$('button[id^="album-info-urls"]').removeClass('active');
+			$(this)
+				.addClass('active')
+				.append( getSpinner(15) );
 			if ( $('#album-info-urls').is(':visible') ) {
-				$('#album-info-urls').slideUp(200);
+				$('#album-info-urls').stop().slideUp(200);
 			}
-			else {
-				$.getJSON('api.cgi?method=get_album_urls&album=' + encodeURIComponent($('#album-container').data('album')['album']) + '&source=' + ($(this).attr('id').indexOf('rarchives') >= 0 ? 'rarchives' : 'site'))
-					.fail(function() { /* TODO */ })
+			var url = 'api.cgi?method=get_album_urls&album=' + encodeURIComponent($('#album-container').data('album')['album']) + '&source=' + $(this).data('id');
+			$(this).data('json', 
+				$.getJSON(url)
+					.always(function() { 
+						$('#album-info-urls-' + id)
+							.empty()
+							.html('urls (' + host + ')');
+					})
+					.fail(function() {
+						$('#album-info-urls-text').val('failed to retrieve images');
+						$('#album-info-urls').stop().slideDown(500);
+					})
 					.done(function(json) {
-						$('#album-info-urls-text')
-							.val(json.join('\n'));
-						$('#album-info-urls').slideDown(500);
-					});
-			}
+						$('#album-info-urls-text').val(json.join('\n'));
+						$('#album-info-urls').stop().slideDown(500);
+					})
+				);
 		});
 }
 
@@ -388,8 +410,7 @@ function addAlbumImage(image) {
 			'twidth'  : image.twidth,
 			'theight' : image.theight,
 			'filesize': image.filesize,
-			'url'     : image.url,
-			'expanded' : false
+			'url'     : image.url
 		})
 		.appendTo( $a )
 		.slideDown(1000);
@@ -448,12 +469,13 @@ function addAlbumImage(image) {
 		.appendTo( $a );
 }
 
-function getSpinner() {
+function getSpinner(size) {
+	if (size === undefined) size = 30;
 	return $('<img/>')
 		.attr('src', 'ui/images/spinner.gif')
 		.css({
-			'width'  : '30px',
-			'height' : '30px',
+			'width'  : size + 'px',
+			'height' : size + 'px',
 			'margin-left'  : '5px',
 			'margin-right' : '5px',
 		});
