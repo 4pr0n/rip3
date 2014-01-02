@@ -67,9 +67,9 @@ function addAlbumPreview(path, album) {
 		
 	$('<div/>')
 		.addClass('col-xs-12')
-		.append( $('<h3/>').html(
-				'<span class="albums-name">' + album.name.replace(' ', '&nbsp;') + '</span>' +
-				' <small class="albums-host">' + album.host + '</small> ' + 
+		.append( $('<h3 style="white-space: nowrap; x-overflow: hidden"/>').html(
+				'<small class="albums-host">' + album.host + '/</small> ' + 
+				' <span class="albums-name">' + album.name.replace(' ', '&nbsp;') + '</span>' +
 				' <small class"albums-count">(' + album.count + '&nbsp;images)</small>')
 			)
 		.appendTo( $div );
@@ -326,7 +326,12 @@ function checkAlbumProgress(album) {
 
 /** Sets up "source URLs" and "mirrored URLs" buttons */
 function setupGetURLs(id, host) {
+	if (host === 'gonewild') {
+		$('#album-info-urls-' + id).attr('disabled', 'disabled');
+		return;
+	}
 	$('#album-info-urls-' + id)
+		.removeAttr('disabled')
 		.html('urls (' + host + ')')
 		.data('source', host)
 		.data('id', id)
