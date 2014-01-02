@@ -115,13 +115,13 @@
 		</div> <!-- /#page-rip -->
 
 		<!-- Albums page (multiple) -->
+		<div id="albums-image"></div> <!-- for displaying images from album previews -->
 		<div id="page-albums" style="display: none">
 			<div class="jumbotron">
 				<div class="container text-center">
 					<h1 class="title"><span class="glyphicon glyphicon-picture"></span> <br>ripped albums</h1>
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
-			<div id="albums-image"></div>     <!-- for displaying images from album previews -->
 			<div id="albums-container"></div> <!-- for displaying album previews -->
 			<div id="albums-status" class="col-xs-12 text-center"></div> <!-- status of loaded albums -->
 		</div> <!-- /#page-albums -->
@@ -179,10 +179,9 @@
 				</div> <!-- /container (album info) -->
 			</div> <!-- /jumbotron -->
 
-			<div class="container" id="album-container">
-			</div> <!-- /#album-container -->
-			<div class="container" id="album-status">
-			</div> <!-- /#album-status -->
+			<div id="album-image"></div> <!-- for displaying images from a single album -->
+			<div class="container" id="album-container"></div> <!-- For holding single album images-->
+			<div class="container" id="album-status"></div>    <!-- For status of single album -->
 		</div> <!-- /#page-album -->
 
 		<!-- Video ripper page -->
@@ -245,9 +244,11 @@
 
 		<!-- Footer -->
 		<div class="container">
-			<footer>
-			<p>&copy; rarchives 2013</p>
-			</footer>
+			<div class="col-xs-12">
+				<footer>
+					<p>&copy; rarchives 2013
+				</footer>
+			</div>
 		</div>
 
 		<script src="./ui/js/jquery-2.0.3.min.js"></script>

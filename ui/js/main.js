@@ -97,10 +97,12 @@ function addAlbumPreview(path, album) {
 				var w = img.width, h = img.height;
 				var ratio = $(window).width() / img.width;
 				w *= ratio; h *= ratio;
+				var t = $(window).scrollTop() + Math.max($('.navbar').height(), ($(window).height() / 2) - (h / 2));
 				$('#albums-image')
 					.css({
 						width: w,
-						height: h
+						height: h,
+						top: t
 					});
 				var $full = $('<img/>')
 					.css({
@@ -114,15 +116,7 @@ function addAlbumPreview(path, album) {
 					.stop()
 					.slideDown(500)
 					.click(function() {
-						$(this)
-							.stop()
-							.slideUp(200, 
-								function() { 
-									$(this).css({
-										'width': '',
-										'height': ''
-									});
-							})
+						$(this).stop().slideUp(200)
 					});
 			});
 	}
@@ -355,83 +349,7 @@ function loadAlbumImages() {
 			var image;
 			for (var i in json) {
 				image = json[i];
-				var $a = $('<a/>')
-					.attr('href', image.image)
-					.css('background-color', 'rgba(0,0,0,0.0)')
-					.addClass('thumbnail');
-				var ratio = 200 / image.theight;
-				image.theight *= ratio;
-				image.twidth *= ratio;
-				var $img = $('<img/>')
-					.attr('src', image.thumb)
-					.css({
-						'width'  : image.twidth + 'px',
-						'height' : image.theight + 'px',
-					})
-					.data('image', {
-						'image'   : image.image,
-						'width'   : image.width + 'px',
-						'height'  : image.height + 'px',
-						'thumb'   : image.thumb,
-						'twidth'  : image.twidth + 'px',
-						'theight' : image.theight + 'px',
-						'filesize': image.filesize,
-						'url'     : image.url,
-						'expanded' : false
-					})
-					.appendTo( $a )
-					.slideDown(1000);
-				$('<div/>')
-					.addClass('col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center')
-					.append( $a )
-					.appendTo( $('#album-container') )
-					.click(function(e) {
-						var $img = $(this).find('img');
-						var imgdata = $img.data('image');
-						if (!imgdata.expanded) {
-							// Expand image
-							$(this).find('a div.caption')
-								.append(
-									$('<p/>').append(
-										$('<a/>')
-											.attr('href', imgdata.url)
-											.attr('target', '_BLANK_' + imgdata.url)
-											.attr('rel', 'noreferrer')
-											.click(function(e) { window.open(imgdata.url); return false; })
-											.html(imgdata.url)
-									)
-								);
-							$(this)
-								.removeClass('col-xs-12 col-sm-6 col-md-4 col-lg-3')
-								.addClass('col-xs-12');
-							$img
-								.attr('src', imgdata.image)
-								.stop()
-								.animate({
-									'width'  : imgdata.width,
-									'height' : imgdata.height
-								}, 500);
-						} else {
-							// Unexpand image
-							$(this).find('a div.caption p').remove();
-							$(this)
-								.removeClass('col-xs-12')
-								.addClass('col-xs-12 col-sm-6 col-md-4 col-lg-3');
-							$img
-								.attr('src', imgdata.thumb)
-								.stop()
-								.animate({
-									'width'  : imgdata.twidth,
-									'height' : imgdata.theight
-								}, 500);
-						}
-						imgdata.expanded = !imgdata.expanded;
-						$('html,body').stop().animate({ 'scrollTop': $img.offset().top - $('div.navbar').height() }, 500);
-						return false;
-					});
-				$('<div class="caption"/>')
-					.html(image.width + '<small>x</small>' + image.height + ' (' + bytesToHR(image.filesize) + ')')
-					.appendTo( $a );
+				addAlbumImage(image);
 			}
 			if (albumdata.total_count !== undefined && 
 			    albumdata.total_count <= albumdata.start) {
@@ -444,6 +362,86 @@ function loadAlbumImages() {
 			setTimeout(function() {
 				$('#album-container').data('album').loading = false;
 			}, 500);
+		});
+}
+
+function addAlbumImage(image) {
+	var $a = $('<a/>')
+		.attr('href', image.image)
+		.css('background-color', 'rgba(0,0,0,0.0)')
+		.addClass('thumbnail');
+	// Expand image to have height 200px
+	var ratio = 200 / image.theight;
+	image.theight *= ratio;
+	image.twidth *= ratio;
+	var $img = $('<img/>')
+		.attr('src', image.thumb)
+		.css({
+			'width'  : image.twidth + 'px',
+			'height' : image.theight + 'px',
+		})
+		.data('image', {
+			'image'   : image.image,
+			'width'   : image.width,
+			'height'  : image.height,
+			'thumb'   : image.thumb,
+			'twidth'  : image.twidth,
+			'theight' : image.theight,
+			'filesize': image.filesize,
+			'url'     : image.url,
+			'expanded' : false
+		})
+		.appendTo( $a )
+		.slideDown(1000);
+	$('<div/>')
+		.addClass('col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center')
+		.append( $a )
+		.appendTo( $('#album-container') )
+		.click(function(e) {
+			var imgdata = $(this).find('img').data('image');
+			console.log('imgdata', imgdata);
+			// Caption
+			var $caption = $('<div/>')
+				.append(
+					$('<p/>').append(
+						$('<a/>')
+							.attr('href', imgdata.url)
+							.attr('target', '_BLANK_' + imgdata.url)
+							.attr('rel', 'noreferrer')
+							.click(function(e) { 
+								e.stopPropagation();
+								window.open(imgdata.url);
+								return false;
+							})
+							.html(imgdata.url)
+					)
+				);
+			var w = imgdata.width, h = imgdata.height;
+			var ratio = $(window).width() / w;
+			w *= ratio; h *= ratio;
+			var t = $(window).scrollTop() + Math.max($('.navbar').height(), ($(window).height() / 2) - (h / 2));
+			$('#album-image')
+				.css({
+					width: w + 'px',
+					height: h + 'px',
+					top: t
+				});
+			var $full = $('<img/>')
+				.attr('src', imgdata.image)
+				.css({
+					'width': '100%',
+					'height': '100%'
+				});
+			$('#album-image')
+				.empty()
+				.append( $full )
+				.append( $caption )
+				.stop()
+				.slideDown(500)
+				.click(function() {
+					$(this).stop().slideUp(200)
+				});
+			return false;
 		});
 }
 
