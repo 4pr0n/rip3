@@ -443,6 +443,9 @@ function addAlbumImage(image) {
 				});
 			return false;
 		});
+	$('<div class="caption"/>')
+		.html(image.width + '<small>x</small>' + image.height + ' (' + bytesToHR(image.filesize) + ')')
+		.appendTo( $a );
 }
 
 function getSpinner() {
