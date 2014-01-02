@@ -113,6 +113,11 @@ class SiteBase(object):
 			}
 
 		urls = self.get_urls()
+
+		if len(urls) == 0:
+			# Can't rip if we don't have URLs
+			raise Exception('no URLs returned from %s (before formatting)' % self.url)
+
 		# Enforce max images limit
 		if len(urls) > self.MAX_IMAGES_PER_RIP:
 			urls = urls[:self.MAX_IMAGES_PER_RIP]
@@ -121,7 +126,7 @@ class SiteBase(object):
 
 		if len(urls) == 0:
 			# Can't rip if we don't have URLs
-			raise Exception('no URLs returned from %s' % self.url)
+			raise Exception('no URLs returned from %s (after formatting)' % self.url)
 
 		# Insert empty album into DB
 		now = timegm(gmtime())
@@ -224,7 +229,7 @@ class SiteBase(object):
 		# We need url, saveas, type, and metadata
 		real_urls = []
 		for (index, url) in enumerate(urls):
-			if type(url) == str:
+			if type(url) == str or type(url) == unicode:
 				# Just a list of URLs. Add other data as needed
 				real_urls.append({
 					'url'      : url,

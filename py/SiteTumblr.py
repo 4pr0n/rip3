@@ -17,9 +17,9 @@ class SiteTumblr(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
-		#return 'http://galaxiesspinperfectly.tumblr.com/post/28457572012/thegirlcrushing-lolfuckthis-had-a-hangover'
+		return 'http://galaxiesspinperfectly.tumblr.com/post/28457572012/thegirlcrushing-lolfuckthis-had-a-hangover'
 		#return 'http://kittykin5.tumblr.com/'
-		return 'http://topinstagirls.tumblr.com/tagged/berlinskaya'
+		#return 'http://topinstagirls.tumblr.com/tagged/berlinskaya'
 
 	def sanitize_url(self):
 		# Strip http and extraneous stuff
@@ -58,16 +58,16 @@ class SiteTumblr(SiteBase):
 		if '.tumblr.com/post/' in url:
 			self.post_type = 'post'
 			post = fields[2]
-			return 'tumblr_%s_post_%s' % (self.user, post)
+			return '%s_post_%s' % (self.user, post)
 		# Tagged
 		elif '.tumblr.com/tagged/' in url:
 			self.post_type = 'tagged'
 			tag = fields[2]
-			return 'tumblr_%s_tagged_%s' % (self.user, tag)
+			return '%s_tagged_%s' % (self.user, tag)
 		# Account
 		elif fields[0].count('.') == 2 and fields[0].split('.')[0] != 'www':
 			self.post_type = 'account'
-			return 'tumblr_%s' % self.user
+			return '%s' % self.user
 
 	def get_api_url(self, offset=0):
 		if self.post_type == 'post':
@@ -117,9 +117,6 @@ class SiteTumblr(SiteBase):
 
 	@staticmethod
 	def get_url_from_album_path(album):
-		'''
-			For divining a url based on the album name
-		'''
 		# tumblr_user[_(tagged|post)_id]
 		# http://[user].tumblr.com[/(tagged|post)/id]
 		fields = album.split('_')
