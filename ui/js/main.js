@@ -212,6 +212,7 @@ function loadAlbum(album) {
 		})
 		.empty();
 	// Album info
+	$('#page-album span, #page-album button, #album-info-name').slideUp(200);
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -230,6 +231,7 @@ function loadAlbum(album) {
 				}
 				throw new Error(json.error);
 			}
+			$('#page-album span, #page-album button, #album-info-name').slideDown(200);
 			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
 			$('#album-info-source').html(json.url);
 			if (json.zip === undefined || json.zip === null) {

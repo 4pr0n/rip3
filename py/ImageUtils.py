@@ -114,6 +114,7 @@ class ImageUtils(object):
 			if subdir == '': continue
 			current = path.join(current, subdir)
 			if not path.exists(current):
+				print 'creating %s' % current
 				mkdir(current)
 
 if __name__ == '__main__':
