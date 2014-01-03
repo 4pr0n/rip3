@@ -190,9 +190,14 @@ class SiteGonewild(SiteBase):
 
 	@staticmethod
 	def test():
+		from os import path
 		sgw = SiteGonewild('gonewild:aappleby9')
-		result = sgw.start()
-		return result.get('error', None)
+		gwroot = sgw.db.get_config('gw_root')
+		if gwroot == None:
+			raise Exception('unable to rip gonewild albums: gw_root is null')
+		if not path.exists(gwroot):
+			raise Exception('unable to rip gonewild albums: gw_root does not exist')
+		return None
 
 if __name__ == '__main__':
 	SiteGonewild.test()
