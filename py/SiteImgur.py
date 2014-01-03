@@ -126,6 +126,7 @@ class SiteImgur(SiteBase):
 		r = httpy.get('%s/noscript' % url)
 		result = []
 		for link in httpy.between(r, 'img src="//i.', '"'):
+			link = 'http://i.%s' % link
 			try:
 				link = self.get_highest_res(link)
 			except Exception, e:
