@@ -93,10 +93,14 @@ class SiteImgur(SiteBase):
 		from Httpy import Httpy
 		httpy = Httpy()
 
-		r = httpy.get('http://api.imgur.com/2/album/%s.json' % url.split('/')[-1])
-		json = loads(r)
-		if 'error' in json:
-			# Error, fall back to noscript method
+		try:
+			r = httpy.get('http://api.imgur.com/2/album/%s.json' % url.split('/')[-1])
+			json = loads(r)
+			if 'error' in json:
+				# Error, fall back to noscript method
+				raise Exception(error)
+		except Exception, e:
+			# Got exception, fall back to noscript method
 			return SiteImgur.get_urls_album_noscript(url)
 
 		# TODO album metadata for json['title'] json['description']
