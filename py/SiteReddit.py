@@ -32,8 +32,8 @@ class SiteReddit(SiteBase):
 			Inserts .json to end of URL (but before ?)
 		'''
 		url = self.url
+		q = ''
 		if not '.json' in url:
-			q = ''
 			if '?' in url:
 				q = url[url.find('?'):]
 				url = url[:url.find('?')]
