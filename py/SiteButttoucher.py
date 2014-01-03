@@ -46,6 +46,14 @@ class SiteButttoucher(SiteBase):
 				break
 		return result
 
+
+	@staticmethod
+	def get_url_from_album_path(album):
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != SiteButttoucher.get_host():
+			return None
+		return 'http://butttoucher.com/users/%s' % fields[1]
+
 	@staticmethod
 	def test():
 		'''
@@ -67,7 +75,8 @@ class SiteButttoucher(SiteBase):
 		urls = s.get_urls()
 		expected = 5
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteButttoucher.test()

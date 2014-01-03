@@ -73,10 +73,10 @@ class SiteXhamster(SiteBase):
 		url = SiteXhamster.get_sample_url()
 		s = SiteXhamster(url)
 		urls = s.get_urls()
-		print len(urls)
 		expected = 10
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteXhamster.test()

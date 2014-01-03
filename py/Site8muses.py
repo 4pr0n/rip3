@@ -63,7 +63,8 @@ class Site8muses(SiteBase):
 		urls = s.get_urls()
 		expected = 21
 		if len(urls) != expected:
-			raise Exception('expected %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	Site8muses.test()

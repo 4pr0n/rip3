@@ -23,7 +23,8 @@ class SiteReddit(SiteBase):
 		#return 'http://www.reddit.com/user/ew2d/submitted?sort=new'
 		#return 'http://www.reddit.com/user/pepsi_next'
 		#return 'http://www.reddit.com/r/AmateurArchives/comments/1rtxt6/psa_dont_print_amateurarchives_at_work/'
-		return 'http://www.reddit.com/search?q=dreamchaser'
+		#return 'http://www.reddit.com/search?q=dreamchaser'
+		return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
 
 	def sanitize_url(self):
 		'''
@@ -187,11 +188,10 @@ class SiteReddit(SiteBase):
 		url = SiteReddit.get_sample_url()
 		s = SiteReddit(url)
 		urls = s.get_urls()
-		for (i, url) in enumerate(urls):
-			print i, url
 		expected = 10
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteReddit.test()

@@ -59,12 +59,22 @@ class SiteImagefap(SiteBase):
 
 	@staticmethod
 	def test():
+		from Httpy import Httpy
+		httpy = Httpy()
+
+		# Check we can hit the host
+		url = 'http://deviantart.com'
+		r = httpy.get(url)
+		if len(r.strip()) == 0:
+			raise Exception('unable to retrieve data from %s' % url)
+
 		url = 'http://www.imagefap.com/pictures/3802288/asdf'
 		s = SiteImagefap(url)
 		urls = s.get_urls()
 		expected = 10
 		if len(urls) != expected:
-			raise Exception('expected %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteImagefap.test()

@@ -17,10 +17,11 @@ class SiteDeviantart(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
-		# Scraps: http://kurisunoerika.deviantart.com/gallery/?catpath=scraps
+		# Scraps:
+		return 'http://kurisunoerika.deviantart.com/gallery/?catpath=scraps'
 		# Gallery: http://dusaleev.deviantart.com/gallery/
 		# Subgallery: http://nemovalkyrja.deviantart.com/gallery/26563333?catpath=/
-		return 'http://nemovalkyrja.deviantart.com/gallery/26563333?catpath=/'
+		#return 'http://nemovalkyrja.deviantart.com/gallery/26563333?catpath=/'
 
 	def sanitize_url(self):
 		self.url = 'http://%s' % self.url.replace('http://', '').replace('https://', '')
@@ -118,13 +119,10 @@ class SiteDeviantart(SiteBase):
 				if begin2 == None:
 					result.append(self.thumb_to_full(chunk))
 					return
-				print 'XXX: %s and %s in %s' % (begin1, end1, page)
-				print 'XXX: CHUNK=\n%s' % chunk
 				if begin2 in chunk and end2 in chunk:
 					url = httpy.between(chunk, begin2, end2)[0]
 					result.append(self.thumb_to_full(url))
 					return
-				print 'XXX: %s and %s NOT in %s' % (begin2, end2, page)
 		# Unable to get image at page
 		raise Exception('failed to get image at %s' % page)
 
@@ -150,10 +148,10 @@ class SiteDeviantart(SiteBase):
 		url = SiteDeviantart.get_sample_url()
 		s = SiteDeviantart(url)
 		urls = s.get_urls()
-		print urls
 		expected = 10
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteDeviantart.test()

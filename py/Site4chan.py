@@ -92,8 +92,8 @@ class Site4chan(SiteBase):
 		s = Site4chan(url)
 		urls = s.get_urls()
 		if len(urls) == 0:
-			raise Exception('expected >0 images, got %d. url: %s' % (len(urls), url))
-		print urls
+			return 'expected >0 images, got %d. url: %s' % (len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	Site4chan.test()

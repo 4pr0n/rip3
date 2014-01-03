@@ -191,7 +191,8 @@ class SiteGonewild(SiteBase):
 	@staticmethod
 	def test():
 		sgw = SiteGonewild('gonewild:aappleby9')
-		print str(sgw.start())
+		result = sgw.start()
+		return result.get('error', None)
 
 if __name__ == '__main__':
 	SiteGonewild.test()

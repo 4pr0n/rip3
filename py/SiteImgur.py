@@ -245,7 +245,8 @@ class SiteImgur(SiteBase):
 		urls = s.get_urls()
 		expected = 4
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 	@staticmethod
 	def get_url_from_album_path(album):

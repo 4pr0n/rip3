@@ -67,7 +67,8 @@ class SiteChansluts(SiteBase):
 		urls = s.get_urls()
 		expected = 10
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+		return None
 
 if __name__ == '__main__':
 	SiteChansluts.test()
