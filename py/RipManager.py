@@ -52,6 +52,11 @@ class RipManager(object):
 			self.current_threads.append(None)
 			# Create new thread to download the media, add to self.results
 			print 'MAIN: %s #%d: launching handler for: %s' % (url['path'], url['i_index'], url['url'])
+
+			# Create subdirs from main thread to avoid race condition
+			dirname = path.join(ImageUtils.get_root(), 'rips', url['path'], 'thumbs')
+			ImageUtils.create_subdirectories(dirname)
+
 			args = (url,)
 			t = Thread(target=self.retrieve_result_from_url, args=args)
 			t.start()
@@ -151,9 +156,8 @@ class RipManager(object):
 			'path'      : url['path']
 		}
 
-		# Create save dir as needed
+		# Get save directory
 		dirname = path.join(ImageUtils.get_root(), 'rips', url['path'])
-		ImageUtils.create_subdirectories(dirname)
 
 		# Generate save path
 		saveas = path.join(dirname, url['saveas'])
@@ -232,7 +236,6 @@ class RipManager(object):
 			return
 
 		# Get thumbnail
-		ImageUtils.create_subdirectories(path.join(dirname, 'thumbs'))
 		tsaveas = path.join(dirname, 'thumbs', url['saveas'])
 		try:
 			(tsaveas, result['t_width'], result['t_height']) = ImageUtils.create_thumbnail(saveas, tsaveas)
