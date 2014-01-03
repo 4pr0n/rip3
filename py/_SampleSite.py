@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
 '''
-	Skeleton class for site ripper
+	Skeleton class for site ripper.
+	Contains documentation on all required/useful methods.
 '''
+
 from SiteBase import SiteBase
 
 class _SampleSite(SiteBase):
@@ -70,7 +72,14 @@ class _SampleSite(SiteBase):
 	def test():
 		'''
 			Test that ripper is working as expected.
-			Raise exception if necessary.
+			StatusManager.py uses the results of this method to show what rippers are working/broken on the main page
+
+			Returns:
+				None - if ripper is working as expected
+				str - Warning message if the ripper may not be working properly.
+
+			Raises:
+				Exception - if ripper is definitely broken. Exception message is used to display on site.
 		'''
 		from Httpy import Httpy
 		httpy = Httpy()
@@ -79,6 +88,7 @@ class _SampleSite(SiteBase):
 		url = 'http://hostname.com'
 		r = httpy.get(url)
 		if len(r.strip()) == 0:
+			# Raise exception because the site is *very* broken, definitely can't rip from it if we can't hit the home page.
 			raise Exception('unable to retrieve data from %s' % url)
 
 		# Check ripper gets all images in an album
@@ -87,7 +97,12 @@ class _SampleSite(SiteBase):
 		urls = s.get_urls()
 		expected = 10
 		if len(urls) < expected:
-			raise Exception('expected at least %d images, got %d. url: %s' % (expected, len(urls), url))
+			# Returning non-None string since this may be a transient error.
+			# Maybe the album was deleted but the ripper is working as expected.
+			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
+
+		# Returning None because the ripper is working as expected. No issues found.
+		return None
 
 if __name__ == '__main__':
 	_SampleSite.test()
