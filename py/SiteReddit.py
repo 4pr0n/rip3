@@ -24,6 +24,7 @@ class SiteReddit(SiteBase):
 		#return 'http://www.reddit.com/user/pepsi_next'
 		#return 'http://www.reddit.com/r/AmateurArchives/comments/1rtxt6/psa_dont_print_amateurarchives_at_work/'
 		#return 'http://www.reddit.com/search?q=dreamchaser'
+		#return 'http://en.reddit.com/r/RealGirls/top?t=all'
 		return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
 
 	def sanitize_url(self):
@@ -42,6 +43,9 @@ class SiteReddit(SiteBase):
 
 	def get_album_name(self):
 		url = self.url
+		url = url[url.find('reddit.com/')+len('reddit.com/'):]
+		url = url.replace('.json', '')
+		# TODO Get sort order (/r/sub/top?t=all, and search query string
 		if '?' in url:
 			url = url[:url.find('?')]
 		if '#' in url:
@@ -49,14 +53,14 @@ class SiteReddit(SiteBase):
 		albumname = []
 		after_reddit = False
 		fields = url.split('/')
+		if len(fields) > 4:
+			fields = fields[0:4]
 		for i in xrange(0, len(fields)):
-			if 'reddit.com' in fields[i]:
-				after_reddit = True
-				continue
 			if fields[i] == 'user':
 				fields[i] = 'u'
-			if after_reddit:
-				albumname.append(fields[i])
+			if fields[i] == 'comments':
+				fields[i] = 'c'
+			albumname.append(fields[i])
 		return '_'.join(albumname)
 
 
@@ -173,7 +177,7 @@ class SiteReddit(SiteBase):
 		fields = album.split('_')
 		if len(fields) < 2 or fields[0] != SiteReddit.get_host():
 			return None
-		return 'http://reddit.com/%s' % '/'.join(fields[1:])
+		return 'http://reddit.com/%s' % '/'.join(fields[1:]).replace('/u/', '/user/').replace('/c/', '/comments/')
 
 	@staticmethod
 	def test():
