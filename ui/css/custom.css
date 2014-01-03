@@ -60,6 +60,7 @@ input[type="color"],
   font-size: 13px;
   color: #555555;
   border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .well {
@@ -82,8 +83,7 @@ input[type="color"],
 .btn.active,
 .btn.disabled,
 .btn[disabled] {
-  color: #ccc;
-  background-color: #e6e6e6;
+  background-color: #fff;
 }
 
 .btn-primary {
