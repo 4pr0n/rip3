@@ -167,12 +167,14 @@ class RipManager(object):
 			print 'THREAD: %s: imgur image was not found (503b) at %s' % (url['path'], url['url'])
 			result['error'] = 'imgur image was not found (503b) at %s' % url['url']
 			self.results.append(result)
+			self.current_threads.pop()
 			return
 
 		if 'Content-type' in meta and 'html' in meta['Content-Type'].lower():
 			print 'THREAD: %s: url returned HTML content-type at %s' % (url['path'], url['url'])
 			result['error'] = 'url returned HTML content-type at %s' % url['url']
 			self.results.append(result)
+			self.current_threads.pop()
 			return
 
 		if meta['content-type'].lower().endswith('png'):
@@ -206,6 +208,7 @@ class RipManager(object):
 			if not saveas.lower().endswith('wmv'):
 				saveas = saveas[:saveas.rfind('.')+1] + 'wmv'
 
+		result['image_name'] = path.basename(saveas)
 		# Attempt to dowload image at URL
 		try:
 			self.httpy.download(url['url'], saveas)
