@@ -12,7 +12,7 @@ from calendar import timegm
 from time     import gmtime
 from shutil   import move
 
-SECONDS_BETWEEN_CHECKS = 0
+SECONDS_BETWEEN_CHECKS = 3600
 FILE_TO_WRITE = '../status.html'
 
 class StatusManager(object):
@@ -51,13 +51,16 @@ class StatusManager(object):
 				checked = now
 				try:
 					print 'testing %s ripper...' % host
-					#result = ripper.test()
+					result = ripper.test()
+					'''
+					# For testing the UI
 					if index % 3 == 0:
 						result = None
 					elif index % 3 == 1:
 						result = 'this site does not work right'
 					else:
 						raise Exception('this ripper REALLY does not work right')
+					'''
 					# test():
 					# 1. Throws exception if something really bad happens (can't access site)
 					# 2. Returns error message (str) if album output isn't as expected

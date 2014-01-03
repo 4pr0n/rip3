@@ -148,7 +148,7 @@ class SiteDeviantart(SiteBase):
 		url = SiteDeviantart.get_sample_url()
 		s = SiteDeviantart(url)
 		urls = s.get_urls()
-		expected = 10
+		expected = 1
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
 		return None
