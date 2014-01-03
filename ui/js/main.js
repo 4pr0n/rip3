@@ -1,6 +1,7 @@
 $(document).ready(function() {
 	setupExamples();
 	setupRipper();
+	loadSiteStatuses();
 	pageChanged();
 });
 
@@ -8,6 +9,14 @@ $(window).bind('popstate', function(e) {
 	pageChanged();
 	e.stopPropagation();
 });
+
+function loadSiteStatuses() {
+	$('#supported-album')
+		.empty()
+		.load('./status.html', function() {
+			$(this).slideDown(200);
+		});
+}
 
 function pageChanged() {
 	$('a:focus').blur(); // Blur focused link
@@ -414,6 +423,15 @@ function addAlbumImage(image) {
 		.attr('href', image.image)
 		.css('background-color', 'rgba(0,0,0,0.0)')
 		.addClass('thumbnail');
+	if (image.error !== null) {
+		// Image isn't found. Show what we have on it anyway
+		image.image = image.url;
+		image.width = 160;
+		image.height = 80;
+		image.thumb = './ui/images/nothumb.png';
+		image.twidth = 200;
+		image.theight = 200;
+	}
 	// Expand image to have height 200px
 	var ratio = 200 / image.theight;
 	image.theight *= ratio;

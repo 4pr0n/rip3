@@ -186,15 +186,19 @@ input[type="color"],
 }
 
 .alert-success {
-  background-color: #dff0d8;
-  border-color: #d6e9c6;
+  background-color: #585;
+  border-color: #8a8;
 }
 .alert-success, .alert-success .alert-heading {
   color: #468847;
 }
 .alert-danger, .alert-error {
-  background-color: #f2dede;
-  border-color: #eed3d7;
+  background-color: #855;
+  border-color: #a88;
+}
+.alert-warning {
+	background-color: #aa3;
+	border-color: #cc3;
 }
 .alert-danger,
 .alert-error,
