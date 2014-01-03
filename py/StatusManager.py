@@ -38,13 +38,13 @@ class StatusManager(object):
 			host = ripper.get_host()
 			url = ripper.get_sample_url()
 
-			need_to_test = False
+			need_to_test = True
 			# Find previous status / info
 			oldhost = oldchecked = oldavailable = oldmessage = None
 			for (oldhost, oldchecked, oldavailable, oldmessage) in stored:
 				if oldhost == host:
 					if now - oldchecked > SECONDS_BETWEEN_CHECKS:
-						need_to_test = True
+						need_to_test = False
 						break
 
 			if need_to_test:
