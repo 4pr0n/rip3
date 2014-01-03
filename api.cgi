@@ -173,13 +173,16 @@ def get_album_urls(keys):
 	source = keys.get('source', 'rarchives')
 	if source == 'source':
 		column = 'url'
+		where = ''
 	else:
 		column = 'image_name'
+		where = 'and medias.error is null'
 	q = '''
 		select %s
 		from medias
 		where album_id in (select rowid from albums where path like ?)
-	''' % column
+		%s
+	''' % (column, where)
 	from py.DB import DB
 	db = DB()
 	cur = db.conn.cursor()
