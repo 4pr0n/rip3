@@ -306,6 +306,15 @@ class SiteBase(object):
 		db.commit()
 		cur.close()
 
+	@staticmethod
+	def fs_safe(txt):
+		safe = 'abcdefghijklmnopqrstuvwxyz0123456789'
+		result = ''
+		for c in txt:
+			if c.lower() in safe:
+				result += c
+		return result
+
 if __name__ == '__main__':
 	'''
 	url = 'http://www.imagefap.com/pictures/3150651/'

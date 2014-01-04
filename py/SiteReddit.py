@@ -20,13 +20,18 @@ class SiteReddit(SiteBase):
 	@staticmethod
 	def get_sample_url():
 		#return 'http://www.reddit.com/user/ew2d'
-		#return 'http://www.reddit.com/user/ew2d/submitted?sort=new'
+		#return 'http://www.reddit.com/user/ew2d/submitted?sort=top'
 		#return 'http://www.reddit.com/user/pepsi_next'
+		#return 'http://www.reddit.com/user/pepsi_next/submitted'
+		#return 'http://www.reddit.com/user/pepsi_next/submitted?sort=top'
+		#return 'http://www.reddit.com/user/pepsi_next/?sort=top'
 		#return 'http://www.reddit.com/r/AmateurArchives/comments/1rtxt6/psa_dont_print_amateurarchives_at_work/'
 		#return 'http://www.reddit.com/search?q=dreamchaser'
+		#return 'http://www.reddit.com/search?q=../../etc/passwd'
 		#return 'http://en.reddit.com/r/RealGirls/top?t=all'
-		#return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
-		return 'http://www.reddit.com/r/gonewild/search?q=first+time&restrict_sr=on&sort=relevance&t=all'
+		return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
+		#return 'http://www.reddit.com/r/gonewild/search?q=first+time&restrict_sr=on&sort=relevance&t=all'
+		#return 'http://www.reddit.com/r/gonewild/search?q=first+time&restrict_sr=off&sort=relevance&t=all'
 
 	def sanitize_url(self):
 		'''
@@ -46,22 +51,41 @@ class SiteReddit(SiteBase):
 		url = self.url
 		url = url[url.find('reddit.com/')+len('reddit.com/'):]
 		url = url.replace('.json', '')
-		# TODO Get sort order (/r/sub/top?t=all, and search query string
-		if '?' in url:
-			url = url[:url.find('?')]
-		if '#' in url:
-			url = url[:url.find('#')]
+		url = url.replace('/?', '?')
+		restrict_sr = True
+		extra = ''
+		if '?t=' in url:
+			# Get top sort
+			extra = url[url.find('?t=')+3:]
+		elif '?sort=' in url:
+			# Get sort
+			extra = url[url.find('?sort=')+6:]
+		elif '?q=' in url:
+			# Get query
+			extra = url[url.find('?q=')+3:]
+			restrict_sr = 'restrict_sr=on' in url
+		if '&' in extra: extra = extra.split('&')[0]
+
+		if '?' in url: url = url.split('?')[0]
+		if '#' in url: url = url.split('#')[0]
+
 		albumname = []
 		after_reddit = False
 		fields = url.split('/')
 		if len(fields) > 4:
 			fields = fields[0:4]
 		for i in xrange(0, len(fields)):
+			if i >= len(fields): break
 			if fields[i] == 'user':
 				fields[i] = 'u'
 			if fields[i] == 'comments':
 				fields[i] = 'c'
-			albumname.append(fields[i])
+			if not restrict_sr and fields[i] == 'r':
+				fields.pop(i)
+			else:
+				albumname.append(SiteBase.fs_safe(fields[i]))
+		if extra != '':
+			albumname.append(SiteBase.fs_safe(extra))
 		return '_'.join(albumname)
 
 
@@ -197,7 +221,41 @@ class SiteReddit(SiteBase):
 		fields = album.split('_')
 		if len(fields) < 2 or fields[0] != SiteReddit.get_host():
 			return None
-		return 'http://reddit.com/%s' % '/'.join(fields[1:]).replace('/u/', '/user/').replace('/c/', '/comments/')
+
+		url = 'http://reddit.com/'
+		fields.pop(0)
+		if len(fields) > 1 and fields[0] == 'r':
+			url += 'r/%s/' % fields[1]
+			fields = fields[2:]
+		if len(fields) > 1 and fields[0] == 'u' or fields[0] == 'user':
+			url += 'user/%s' % fields[1]
+			fields = fields[2:]
+			while len(fields) > 0:
+				if fields[0] in ['comments', 'submitted', 'top']:
+					break
+				url += '_%s' % fields[0]
+				fields.pop(0)
+			url += '/'
+			if len(fields) > 0 and fields[0] == 'top':
+				url += '?sort=top'
+				fields.pop(0)
+		if len(fields) > 1 and fields[0] == 'search':
+			url += 'search?q=%s' % fields[1]
+			fields = fields[2:]
+		if len(fields) > 1 and fields[0] == 'c':
+			url += 'comments/%s/' % fields[1]
+			fields = fields[2:]
+		if len(fields) > 0 and fields[0] in ['top']:
+			url += '%s/' % fields[0]
+			fields = fields[1:]
+			if len(fields) > 0:
+				url += '?t=%s' % '_'.join(fields)
+		if len(fields) > 0 and fields[0] in ['submitted', 'comments']:
+			url += '%s/' % fields[0]
+			fields = fields[1:]
+			if len(fields) > 0:
+				url += '?sort=%s' % '_'.join(fields)
+		return url
 
 	@staticmethod
 	def test():
