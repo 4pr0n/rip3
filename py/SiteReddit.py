@@ -25,7 +25,8 @@ class SiteReddit(SiteBase):
 		#return 'http://www.reddit.com/r/AmateurArchives/comments/1rtxt6/psa_dont_print_amateurarchives_at_work/'
 		#return 'http://www.reddit.com/search?q=dreamchaser'
 		#return 'http://en.reddit.com/r/RealGirls/top?t=all'
-		return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
+		#return 'http://www.reddit.com/r/AmateurArchives/comments/186q1m/onceavirgin_24_pics/'
+		return 'http://www.reddit.com/r/gonewild/search?q=first+time&restrict_sr=on&sort=relevance&t=all'
 
 	def sanitize_url(self):
 		'''
@@ -91,11 +92,8 @@ class SiteReddit(SiteBase):
 		return urls
 
 	def get_urls(self):
-		from Httpy import Httpy
-		httpy = Httpy()
-
 		url = self.url
-		r = httpy.get(url)
+		r = self.httpy.get(url)
 		self.result = [] # Instance field because other methods will add to it (add_urls)
 		self.already_got = [] # URLs we've already added
 		while True:
@@ -113,7 +111,7 @@ class SiteReddit(SiteBase):
 				if 'data' in json and 'after' in json['data']:
 					after = json['data']['after']
 			# Stop now if there's no next page
-			if after == None or len(self.result) >= 50: # self.MAX_IMAGES_PER_RIP:
+			if after == None or len(self.result) >= self.MAX_IMAGES_PER_RIP:
 				break
 			# Load the next page
 			url = self.url
@@ -121,7 +119,7 @@ class SiteReddit(SiteBase):
 				url = '%s&after=%s' % (url, after)
 			else:
 				url = '%s?after=%s' % (url, after)
-			r = httpy.get(url)
+			r = self.httpy.get(url)
 			sleep(2)
 
 		return self.result
@@ -149,28 +147,50 @@ class SiteReddit(SiteBase):
 			fields = url.split('/')
 			if len(fields) > 4:
 				sleep(1)
-				urls = SiteImgur.get_urls_album_noscript('http://imgur.com/a/%s' % fields[4])
-				self.already_got.extend(url)
-				self.result.extend(urls)
+				try:
+					urls = SiteImgur.get_urls_album_noscript('http://imgur.com/a/%s' % fields[4])
+				except Exception, e:
+					# Failed to get urls, stop.
+					return
+
+				for u in urls:
+					if u in self.already_got:
+						continue
+					self.result.append(u)
 
 		# Direct link to image
 		elif 'imgur.com/' in url and \
 		     (url[-4] == '.' or url[-5] == '.'):
-			self.already_got.append(url)
-			self.result.append(url)
+			if not url in self.already_got:
+				self.already_got.append(url)
+				self.result.append(url)
 
 		# Non-direct link to image
 		else:
-			sleep(1)
-			r = httpy.get(url)
-			if 'rel="image_src" href="' in r:
-				url = httpy.between(r, 'rel="image_src" href="', '"')[0]
+			# XXX Assume all links are jpgs and already at full-res
+			imgid = url[url.find('imgur.com/')+len('imgur.com/'):]
+			if '/' in imgid: imgid = imgid.split('/')[0]
+			if '?' in imgid: imgid = imgid.split('?')[0]
+			if '#' in imgid: imgid = imgid.split('#')[0]
+			url = 'http://i.imgur.com/%s.jpg' % imgid
+			if not url in self.already_got:
 				self.already_got.append(url)
 				self.result.append(url)
+			'''
+			# This code gets the real URL, but can be expensive if we do it hundreds of times in 1 request.
+			sleep(1)
+			r = self.httpy.get(url)
+			if 'rel="image_src" href="' in r:
+				url = self.httpy.between(r, 'rel="image_src" href="', '"')[0]
+				self.already_got.append(url)
+				self.result.append(url)
+			'''
 
 	def add_urls(self, urls):
 		for url in urls:
 			self.add_url(url)
+			if len(self.result) >= self.MAX_IMAGES_PER_RIP:
+				break
 
 	@staticmethod
 	def get_url_from_album_path(album):
