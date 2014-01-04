@@ -73,8 +73,6 @@ class SiteDeviantart(SiteBase):
 		from Httpy import Httpy
 		httpy = Httpy()
 
-		self.thread_count = 0
-		self.max_threads  = 3
 		r = httpy.get(self.url)
 		result = []
 		already_got = []
@@ -86,9 +84,9 @@ class SiteDeviantart(SiteBase):
 					continue
 				already_got.append(link)
 				# Get image from page
-				while self.thread_count >= self.max_threads:
+				while len(self.threads) >= self.max_threads:
 					sleep(0.1)
-				self.thread_count += 1
+				self.threads.append(None)
 				t = Thread(target=self.get_url_from_page, args=(httpy, result, link,))
 				t.start()
 			# Go to next page
@@ -99,19 +97,19 @@ class SiteDeviantart(SiteBase):
 			if not 'offset=' in next_page:
 				break
 			r = httpy.get(next_page)
-		while self.thread_count > 0:
+		while len(self.threads) > 0:
 			sleep(0.1)
 		return result
 
 	def get_url_from_page(self, httpy, result, page):
 		r = httpy.get(page)
-		self.thread_count -= 1
+		self.threads.pop()
 		d = [
-			('id="download-button"',      '<',     'href="',             '"'),
-			('ResViewSizer_img',          '>',     'src="',              '"'),
-			('name="og:image" content="', '"',      None,                None),
+			('id="download-button"',      '<',     'href="',              '"'),
+			('ResViewSizer_img',          '>',     'src="',               '"'),
+			('name="og:image" content="', '"',      None,                 None),
 			('<div class="preview"',      '</div>', '" data-super-img="', '"'),
-			('<div class="preview"',      '</div>', '" data-src="', '"')
+			('<div class="preview"',      '</div>', '" data-src="',       '"')
 		]
 		for (begin1, end1, begin2, end2) in d:
 			if begin1 in r and end1 in r:
@@ -124,7 +122,6 @@ class SiteDeviantart(SiteBase):
 					result.append(self.thumb_to_full(url))
 					return
 		# Unable to get image at page
-		raise Exception('failed to get image at %s' % page)
 
 	def thumb_to_full(self, url):
 		return url.replace('://th', '://fc').replace('/150/i/', '/i/').replace('/150/f/', '/f/')

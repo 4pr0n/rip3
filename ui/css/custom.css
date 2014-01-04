@@ -180,7 +180,7 @@ input[type="color"],
 }
 
 .alert {
-  padding: 8px 35px 8px 14px;
+  padding: 8px 14px 8px 14px;
   background-color: #fcf8e3;
   border: 1px solid #fbeed5;
 }

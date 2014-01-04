@@ -83,7 +83,7 @@ class SiteBase(object):
 		'''
 		raise Exception('get_album_name() not overridden by inheriting class')
 
-	def get_host(self, url):
+	def get_host(self):
 		'''
 			Returns the 'name' of this ripper's host
 		'''
@@ -210,13 +210,13 @@ class SiteBase(object):
 				e.g. 'video', 'image', 'text' or 'html'
 		'''
 		ext = url[url.rfind('.')+1:].lower()
-		if ext in ['mp4', 'flv', 'wmv', 'mpg']:
+		if ext[:3] in ['mp4', 'flv', 'wmv', 'mpg']:
 			return 'video'
-		elif ext in ['jpg', 'jpeg', 'png', 'gif']:
+		elif ext[:3] in ['jpg', 'jpe', 'png', 'gif']:
 			return 'image'
-		elif ext in ['html']:
+		elif ext[:4] in ['html']:
 			return 'html'
-		elif ext in ['txt']:
+		elif ext[:3] in ['txt']:
 			return 'text'
 	
 	@staticmethod

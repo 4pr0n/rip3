@@ -62,12 +62,12 @@ SCHEMA = {
 
 	'urls' :
 		'album_id  integer,' + # rowid of album
-		'i_index  integer,' +  # Index image appears in album
-		'url      text,' +     # source URL
-		'saveas   text,' +     # What the ripper thinks the file should be saved as
-		'type     text,' +     # Media type
-		'metadata text,' +     # Info about image
-		'added    integer,' +  # Date added to DB
+		'i_index   integer,' +  # Index image appears in album
+		'url       text,' +     # source URL
+		'saveas    text,' +     # What the ripper thinks the file should be saved as
+		'type      text,' +     # Media type
+		'metadata  text,' +     # Info about image
+		'added     integer,' +  # Date added to DB
 		'primary key(album_id, i_index)',
 
 	'sites' :
@@ -82,21 +82,26 @@ SCHEMA = {
 		'message  text,' +
 		'foreign key(album_id) references albums(rowid),' +
 		'primary key(album_id, user)',
-	
+
 	'blacklist' :
 		'host    text,' + # Name of host 
 		'album   text,' + # Name of album
 		'reason  text,' + # Reason for blacklist
 		'admin   text,' + # IP of admin blacklisting
 		'primary key(host, album)',
-	
+
 	'users' :
 		'ip              text primary key,' + # IP of user
 		'warning_message text,' +    # Warning message to display to user
 		'warnings        integer,' + # Number of times user has been warned
 		'warned          integer,' + # Date user was last warned
 		'banned          integer,' + # If user is banned
-		'banned_reason   text',      # Reason for banning
+		'banned_reason   text,' +    # Reason for banning
+		'banned_url      text',      # URL user was banned for
+
+	'admins' :
+		'username text primary key,' +
+		'cookie   text',
 
 	'config' :
 		'key   text primary key,' +
