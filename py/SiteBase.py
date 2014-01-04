@@ -18,6 +18,12 @@ class SiteBase(object):
 	'''
 	MAX_IMAGES_PER_RIP = 500
 
+	'''
+		Maximum threads allowed at one time
+		Used for retrieving URLs for sub-pages
+	'''
+	MAX_THREADS = 3
+
 	def __init__(self, url):
 		if not self.can_rip(url):
 			# Don't instantiate if we can't rip it
@@ -27,6 +33,8 @@ class SiteBase(object):
 		self.album_name = self.get_album_name()
 		self.db = DB()
 		self.httpy = Httpy()
+		self.max_threads  = self.MAX_THREADS
+		self.threads      = []
 
 		try:
 			self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])

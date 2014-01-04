@@ -167,6 +167,72 @@ class Httpy:
 		
 		return result
 
+	def get_extended(self, url, headers={}, retry=1):
+		"""
+			Attempts GET request with extended options
+			Returns html source of a webpage (string)
+			Follows redirects for 'retry' times
+			Does *NOT* utilize cookie jar!
+		"""
+		if not 'User-agent' in headers:
+			headers['User-agent'] = self.user_agent
+		
+		(https, host, path) = self.get_https_host_path(url)
+		try:
+			# Build and make request
+			if https:
+				req = httplib.HTTPSConnection(host)
+			else:
+				req = httplib.HTTPConnection(host)
+			req.putrequest('GET', path)
+			for hkey in headers.keys():
+				req.putheader(hkey, headers[hkey])
+			req.endheaders()
+
+			resp = req.getresponse()
+
+			# Request was successful, get response
+			if resp.status == 200:
+				return resp.read()
+			# Redirect, follow it.
+			elif resp.status in [301, 302] and resp.getheader('Location') != None:
+				return self.get_extended(resp.getheader('Location'), headers=headers, retry=retry-1)
+
+			# Don't retry 404 errors
+			elif resp.status == 404:
+				raise Exception('404 error')
+
+			# Try to read response anyway, raise exception if needed
+			else:
+				result = resp.read()
+
+		except Exception, e:
+			# Don't bother retrying 404 errors
+			if '404' in str(e):
+				raise Exception(e)
+			# Try again
+			if retry > 0:
+				return self.get_extended(url, headers=headers, retry=retry-1)
+			raise Exception(e)
+		raise Exception('status: %s - failed to get content at %s' % (resp.status, url))
+
+	def get_https_host_path(self, url):
+		"""
+			Helper method used by get_extended()
+			Args:
+				url: URL to split into HTTPS, hostname, and file path
+			Returns:
+				Tuple:
+					[0] "https": boolean, true if url is HTTPS, false otherwise
+					[1] "host": Hostname from url
+					[2] "path": Path from url
+		"""
+		https  = url.startswith('https')
+		fields = url[url.find('//')+2:].split('/')
+		host = fields[0]
+		path = '/%s' % '/'.join(fields[1:])
+		return (https, host, path)
+	
 if __name__ == '__main__':
 	httpy = Httpy()
 	url = 'http://www.example.com'
