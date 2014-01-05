@@ -670,6 +670,10 @@ function setupRippers() {
 }
 
 function startVideoRip(url) {
+	if (url === '') {
+		$('#text-rip-video').val('');
+		return;
+	}
 	url = url.replace('||AMP||', '&'); // Convert flags back to &amp;
 	if (url.indexOf('http') != 0) {
 		url = 'http://' + url;
@@ -677,7 +681,6 @@ function startVideoRip(url) {
 	$('#text-rip-video').val(decodeURIComponent(url));
 	$('#video-info-container')
 		.slideUp(200);
-	if (url === '') { return; }
 	url = encodeURIComponent(url);
 	$('#status-rip-video')
 		.removeClass()

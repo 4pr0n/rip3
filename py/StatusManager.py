@@ -34,8 +34,10 @@ class StatusManager(object):
 		# Iterate over rippers, store new values for DB in 'insertmany'
 		insertmany = []
 		rippers = list(SiteBase.iter_rippers())
+		'''
 		if len(rippers) % 3 != 0:
 			rippers = rippers[0:-(len(rippers) % 3)]
+		'''
 		for (index, ripper) in enumerate(rippers):
 			host = ripper.get_host()
 			url = ripper.get_sample_url()
