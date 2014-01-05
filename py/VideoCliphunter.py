@@ -31,14 +31,9 @@ class VideoCliphunter(VideoBase):
 		jsonurl = loads(json['url'].decode('base64'))
 		vid = self.decrypt(jsonurl['u']['l'])
 
-		meta = self.httpy.get_meta(vid)
-		filesize = meta.get('Content-Length', 0)
-		filetype = meta.get('Content-Type', 'unknown')
-		if not filetype.startswith('video/'):
-			raise Exception('content-type (%s) not "video/" at %s' % (filetype, vid))
-		else:
-			filetype = filetype.replace('video/', '').replace('x-', '')
-		return (vid, filesize, filetype)
+		result = self.get_video_info(vid)
+		result['poster'] = None # Beeg doesn't provide video splash images
+		return result
 
 	def decrypt(self, txt):
 		'''
@@ -64,24 +59,7 @@ class VideoCliphunter(VideoBase):
 
 	@staticmethod
 	def test():
-		from Httpy import Httpy
-		httpy = Httpy()
-
-		# Check that we can hit the host
-		url = 'http://www.cliphunter.com'
-		r = httpy.get(url)
-		if len(r) == 0:
-			raise Exception('unable to get content at %s' % url)
-
-		# Try to rip the sample video
-		url = VideoCliphunter.get_sample_url()
-		v = VideoCliphunter(url)
-		(url, filesize, filetype) = v.rip_video()
-
-		# Assert we got the video
-		if filesize == 0 or filetype == 'unknown':
-			return 'unexpected filesize (%s) or filetype (%s) at %s' % (filesize, filetype, url)
-		return None
+		return VideoBase.test_ripper(VideoCliphunter)
 
 if __name__ == '__main__':
 	VideoCliphunter.test()
