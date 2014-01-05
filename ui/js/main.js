@@ -729,7 +729,7 @@ function startVideoRip(url) {
 								$(this).attr('href', $(this).data('url'));
 							}
 						})
-						.html('download')
+						.html('<span class="glyphicon glyphicon-download"></span> <b>download</b>')
 				);
 			$('#video-info-size')
 					.html( bytesToHR(json.size) );

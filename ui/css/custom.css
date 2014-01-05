@@ -383,3 +383,8 @@ h3 small {
 	height: 100%;
 	z-index: 99;
 }
+
+#video-info-url, #video-info-url:hover{
+	color: none;
+	text-decoration: none;
+}
