@@ -17,6 +17,8 @@ class SiteXhamster(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
+		# 109 images
+		#return 'http://xhamster.com/photos/gallery/141737/big_boobed_brunette_self_shot_amateur_hottie_2.html'
 		return 'http://xhamster.com/photos/gallery/1479233/sarah_from_glasgow.html'
 
 	def sanitize_url(self):
@@ -44,6 +46,7 @@ class SiteXhamster(SiteBase):
 					link = link.replace('_160.', '_1000.').replace('http://p2.', 'http://up.')
 					result.append(link)
 				break
+			page += 1
 			next_page = self.url.replace('.html', '-%d.html' % page)
 			if next_page in r:
 				r = httpy.get(next_page)
@@ -73,6 +76,7 @@ class SiteXhamster(SiteBase):
 		url = SiteXhamster.get_sample_url()
 		s = SiteXhamster(url)
 		urls = s.get_urls()
+
 		expected = 10
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
