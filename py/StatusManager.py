@@ -6,6 +6,7 @@
 '''
 
 from SiteBase import SiteBase
+from VideoBase import VideoBase
 from DB import DB
 
 from calendar import timegm
@@ -13,14 +14,15 @@ from time     import gmtime
 from shutil   import move
 
 SECONDS_BETWEEN_CHECKS = 3600
-FILE_TO_WRITE = '../status.html'
+ALBUM_FILE_TO_WRITE = '../status.html'
+VIDEO_FILE_TO_WRITE = '../status_video.html'
 
 class StatusManager(object):
 	def __init__(self):
 		self.db = DB()
 		pass
 
-	def execute(self):
+	def update_albums(self):
 		# Get existing statuses
 		now = timegm(gmtime())
 		cursor = self.db.conn.cursor()
@@ -84,14 +86,14 @@ class StatusManager(object):
 			curexec = cursor.executemany('insert or replace into sites values (?, ?, ?, ?)', insertmany)
 			self.db.commit()
 			cursor.close()
-			
+
 		# Write changes to HTML file
-		temp_file = '%s.tmp' % FILE_TO_WRITE
+		temp_file = '%s.tmp' % ALBUM_FILE_TO_WRITE
 		f = open(temp_file, 'w')
 		f.write(html_output)
 		f.flush()
 		f.close()
-		move(temp_file, FILE_TO_WRITE)
+		move(temp_file, ALBUM_FILE_TO_WRITE)
 	
 	def host_html(self, host, url, available, message, checked):
 		if available == 1:
@@ -102,6 +104,9 @@ class StatusManager(object):
 		else: 
 			color = 'danger'
 			sign = 'exclamation'
+
+		if message != None:
+			message = message.replace('<', '&lt;').replace('>', '&gt;')
 
 		html  = '\n'
 		html += '<div class="col-xs-6 col-sm-3 col-md-2 alert alert-%s" id="site_%s_div">\n' % (color, host)
@@ -119,7 +124,33 @@ class StatusManager(object):
 		html += '</div>\n'
 		return html
 
+
+	def update_videos(self):
+		html = ''
+		for ripper in VideoBase.iter_rippers():
+			try:
+				print 'testing %s ripper...' % ripper.get_host()
+				message = ripper.test()
+				if message == None:
+					available = 1
+				else:
+					available = 0
+			except Exception, e:
+				available = -1
+				message = str(e)
+			url = ripper.get_sample_url().replace('&', '||AMP||')
+			url = 'video=%s' % url
+			html += self.host_html(ripper.get_host(), url, available, message, None)
+
+		temp_file = '%s.tmp' % VIDEO_FILE_TO_WRITE
+		f = open(temp_file, 'w')
+		f.write(html)
+		f.flush()
+		f.close()
+		move(temp_file, VIDEO_FILE_TO_WRITE)
+
+
 if __name__ == '__main__':
 	sm = StatusManager()
-	sm.execute()
-	#print sm.host_html('imagefap', 'asdf.com', 1, None, 5)
+	#sm.update_albums()
+	sm.update_videos()

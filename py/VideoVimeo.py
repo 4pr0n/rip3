@@ -40,7 +40,7 @@ class VideoVimeo(VideoBase):
 		vid = formats[ideal]['url']
 
 		result = self.get_video_info(vid)
-		result['poster'] = None # Beeg doesn't provide video splash images
+		result['poster'] = None # No preview
 		return result
 
 	@staticmethod

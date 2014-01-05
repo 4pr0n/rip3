@@ -27,6 +27,7 @@ class VideoXhamster(VideoBase):
 
 		result = self.get_video_info(vid)
 		result['poster'] = None # Beeg doesn't provide video splash images
+		result['no_video'] = True # Don't embed video
 		return result
 
 	@staticmethod

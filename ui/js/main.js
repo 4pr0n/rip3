@@ -15,6 +15,9 @@ function loadSiteStatuses() {
 		.load('./status.html', function() {
 			$(this).slideDown(200);
 		});
+	$('#supported-video')
+		.empty()
+		.load('./status_video.html');
 }
 
 function pageChanged() {
@@ -668,6 +671,9 @@ function setupRippers() {
 
 function startVideoRip(url) {
 	url = url.replace('||AMP||', '&'); // Convert flags back to &amp;
+	if (url.indexOf('http') != 0) {
+		url = 'http://' + url;
+	}
 	$('#text-rip-video').val(decodeURIComponent(url));
 	$('#video-info-container')
 		.slideUp(200);
@@ -689,12 +695,17 @@ function startVideoRip(url) {
 					.html(json.error)
 					.hide()
 					.slideDown(200);
+				if ('trace' in json) {
+					$('<div class="text-left" style="line-height: 1.0em"/>')
+						.append( $('<small/>').html(json.trace) )
+						.appendTo( $('#status-rip-video') );
+				}
 				return;
 			}
 			$('#status-rip-video')
 				.removeClass()
 				.slideUp(200, function() { $(this).empty() });
-			$('#video-title').html(json.host + ' <small>' + json.url + '</small>');
+			$('#video-title').html(json.host + ' <small>' + json.source.replace('http://', '').replace('www.', '').replace(json.host, '') + '</small>');
 			$('#video-info-url')
 				.empty()
 				.append(
@@ -725,61 +736,80 @@ function startVideoRip(url) {
 				.slideDown(500);
 
 			// Show video
-			$('#video-player-container').empty();
-			var $vid = $('<video/>');
-			if ( $vid[0].canPlayType('video/' + json.type) !== '') {
-				$vid
-					.attr('controls', 'controls')
-					.css('width', '100%')
-					.appendTo( $('#video-player-container') );
-				$('<source/>')
-					.attr('src', json.url)
-					.attr('type', 'video/' + json.type)
-					.appendTo( $vid );
+			$('#video-player-anchor').remove();
+			$('#video-player-container h3,p').remove();
+			$('<a/>')
+				.attr('href', json.source)
+				.attr('target', '_BLANK_' + json.host)
+				.attr('rel', 'noreferrer')
+				.html(json.source)
+				.appendTo( $('#video-player-source').html('<b>source:</b> ') );
+			$('#video-player-source')
+			if ('no_video' in json) {
+				$('<p/>')
+					.html('try the download link')
+					.prependTo( $('#video-player-container') );
+				$('<h3/>')
+					.html('unable to stream video from site')
+					.prependTo( $('#video-player-container') );
 			}
 			else {
-				// Can't play this type, default to flash
-				var flowplayer_id = 'video-player-anchor',
-				    flowplayer_swf = 'ui/swf/flowplayer-3.2.18.swf',
-						flowplayer_config = {
-							onLoad: function() {
-								this.setVolume(30);
-							},
-							clip: {
-								autoPlay: false,
-								autoBuffering: true,
-								onMetaData: function(clip) {
-									var w = parseInt(clip.metaData.width, 100);
-									var h = parseInt(clip.metaData.height, 100);
-									var ratio = $(window).width() / w;
-									h = h * ratio;
-									$(this.getParent()).css({
-										width: w,
-										height: h
-									});
-								}
-							}
-						};
-				$vid.hide();
-				$('<a/>')
-					.attr('href', json.url)
-					.css({
-						'width'   : '100%',
-						'height'  : '400px',
-						'display' : 'block',
-						'margin'  : '10px auto'
-					})
-					.attr('id', flowplayer_id)
-					.appendTo( $('#video-player-container') );
-				if ( $('#video-script').size() == 0) {
-					$('<div id="video-script" style="display: none" />').appendTo( $('body') );
-					$.getScript('ui/js/flowplayer-3.2.13.min.js')
-						.done(function() {
-							flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
-						});
+				var $vid = $('<video/>');
+				if ( $vid[0].canPlayType('video/' + json.type) !== '') {
+					$vid
+						.attr('id', 'video-player-anchor')
+						.attr('controls', 'controls')
+						.css('width', '100%')
+						.prependTo( $('#video-player-container') );
+					$('<source/>')
+						.attr('src', json.url)
+						.attr('type', 'video/' + json.type)
+						.appendTo( $vid );
 				}
 				else {
-					flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
+					// Can't play this type, default to flash
+					var flowplayer_id = 'video-player-anchor',
+							flowplayer_swf = 'ui/swf/flowplayer-3.2.18.swf',
+							flowplayer_config = {
+								onLoad: function() {
+									this.setVolume(30);
+								},
+								clip: {
+									autoPlay: false,
+									autoBuffering: true,
+									onMetaData: function(clip) {
+										var w = parseInt(clip.metaData.width, 100);
+										var h = parseInt(clip.metaData.height, 100);
+										var ratio = $(window).width() / w;
+										h = h * ratio;
+										$(this.getParent()).css({
+											width: w,
+											height: h
+										});
+									}
+								}
+							};
+					$vid.hide();
+					$('<a/>')
+						.attr('href', json.url)
+						.css({
+							'width'   : '100%',
+							'height'  : '400px',
+							'display' : 'block',
+							'margin'  : '10px auto'
+						})
+						.attr('id', flowplayer_id)
+						.prependTo( $('#video-player-container') );
+					if ( $('#video-script').size() == 0) {
+						$('<div id="video-script" style="display: none" />').appendTo( $('body') );
+						$.getScript('ui/js/flowplayer-3.2.13.min.js')
+							.done(function() {
+								flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
+							});
+					}
+					else {
+						flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
+					}
 				}
 			}
 		});
