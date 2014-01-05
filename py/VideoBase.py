@@ -61,7 +61,8 @@ class VideoBase(object):
 			'url' : url,
 			'size' : filesize,
 			'type' : filetype,
-			'host' : self.get_host()
+			'host' : self.get_host(),
+			'source' : self.url
 		}
 
 	@staticmethod

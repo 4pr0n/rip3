@@ -45,6 +45,14 @@ class VideoVimeo(VideoBase):
 
 	@staticmethod
 	def test():
+		from Httpy import Httpy
+		httpy = Httpy()
+		try:
+			r = httpy.get('http://www.vimeo.com/')
+			if len(r.strip()) == 0:
+				raise Exception('empty response from vimeo.com')
+		except Exception, e:
+			raise e
 		return VideoBase.test_ripper(VideoVimeo)
 
 if __name__ == '__main__':

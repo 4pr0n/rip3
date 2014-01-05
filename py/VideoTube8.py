@@ -35,7 +35,9 @@ class VideoTube8(VideoBase):
 		vid = AES.decrypt(quality, title, 256)
 
 		result = self.get_video_info(vid)
-		result['poster'] = None # Beeg doesn't provide video splash images
+		result['poster'] = None # No Preview
+		result['no_video'] = True # Don't try to display the video
+		result['title'] = title
 		return result
 
 	@staticmethod

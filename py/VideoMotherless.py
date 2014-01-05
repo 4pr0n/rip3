@@ -25,7 +25,8 @@ class VideoMotherless(VideoBase):
 		vid = self.httpy.between(r, "__fileurl = '", "'")[0]
 
 		result = self.get_video_info(vid)
-		result['poster'] = None # Beeg doesn't provide video splash images
+		result['poster'] = None # No preview
+		result['no_video'] = True # Don't try to display the video
 		return result
 
 	@staticmethod
