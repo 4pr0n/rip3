@@ -225,7 +225,7 @@ function loadAlbum(album) {
 		})
 		.empty();
 	// Album info
-	$('#page-album span, #page-album button, #album-info-name').slideUp(200);
+	$('#page-album span,#album-info-urls,#album-info-urls-text,#page-album button,#album-info-name').slideUp(200);
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -298,6 +298,8 @@ function loadAlbum(album) {
 			$('#album-info-created').html(new Date(json.created * 1000).toLocaleString());
 			$('#album-container').data('album')['total_count'] = json.count;
 			// "Get URLs" buttons
+			$('#album-info-urls-text').hide();
+			$('#album-info-urls-source,#album-info-urls-rarchives').removeClass('active').removeAttr('disabled');
 			setupGetURLs('source',    json.host)
 			setupGetURLs('rarchives', 'rarchives')
 			// Album progress, decides if thumbnails should be loaded
@@ -348,6 +350,7 @@ function setupGetURLs(id, host) {
 		.html('urls (' + host + ')')
 		.data('source', host)
 		.data('id', id)
+		.unbind('click')
 		.click(function() {
 			if ( $(this).hasClass('active') ) {
 				$(this).removeClass('active');
@@ -371,11 +374,17 @@ function setupGetURLs(id, host) {
 							.html('urls (' + host + ')');
 					})
 					.fail(function() {
-						$('#album-info-urls-text').val('failed to retrieve images');
+						$('#album-info-urls-text')
+							.val('failed to retrieve images')
+							.stop()
+							.show();
 						$('#album-info-urls').stop().slideDown(500);
 					})
 					.done(function(json) {
-						$('#album-info-urls-text').val(json.join('\n'));
+						$('#album-info-urls-text')
+							.val(json.join('\n'))
+							.stop()
+							.show();
 						$('#album-info-urls').stop().slideDown(500);
 					})
 				);
