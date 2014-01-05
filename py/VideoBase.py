@@ -41,7 +41,7 @@ class VideoBase(object):
 					['url']    video url
 					['size']   filesize of video
 					['type']   type of video (mp4/flv)
-					['poster'] image showing preview of album
+					['poster'] image showing preview of album (optional)
 		'''
 		raise Exception('rip-video() not overridden by inheriting class')
 
@@ -60,7 +60,8 @@ class VideoBase(object):
 		return {
 			'url' : url,
 			'size' : filesize,
-			'type' : filetype
+			'type' : filetype,
+			'host' : self.get_host()
 		}
 
 	@staticmethod
@@ -68,6 +69,7 @@ class VideoBase(object):
 		'''
 			Iterator over all video rippers in this directory
 		'''
+		from os import getcwd, listdir, path
 		if not getcwd().endswith('py'):
 			prefix = 'py.'
 		for mod in listdir(path.dirname(path.realpath(__file__))):
@@ -92,7 +94,7 @@ class VideoBase(object):
 			Raises:
 				Exception if no ripper can be found, or other errors occurred
 		'''
-		for ripper in SiteBase.iter_rippers():
+		for ripper in VideoBase.iter_rippers():
 			if 'can_rip' in ripper.__dict__ and ripper.can_rip(url):
 				return ripper
 		raise Exception('no compatible ripper found')

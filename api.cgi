@@ -23,6 +23,7 @@ def main():
 	elif method == 'get_album_urls':     return get_album_urls(keys)
 	elif method == 'generate_zip':       return generate_zip(keys)
 	elif method == 'get_albums':         return get_albums(keys)
+	elif method == 'rip_video':          return rip_video(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -60,6 +61,19 @@ def rip_album(keys):
 	except Exception, e:
 		return err(str(e), tb=format_exc())
 
+
+def rip_video(keys):
+	if not 'url' in keys:
+		return err('url required')
+
+	url = keys['url']
+	try:
+		from py.VideoBase import VideoBase
+		Ripper = VideoBase.get_ripper(url)
+		ripper = Ripper(url)
+		return ripper.rip_video()
+	except Exception, e:
+		return err(str(e), tb=format_exc())
 
 ##############
 # SINGLE ALBUM

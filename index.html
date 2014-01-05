@@ -168,18 +168,45 @@
 					<p class="text-center"> download videos hosted on various websites
 					<div class="input-group input-group-md">
 						<span class="input-group-btn">
-							<button id="button-rip-album" class="btn btn-primary" type="button">
+							<button id="button-rip-video" class="btn btn-primary" type="button">
 								<span class="glyphicon glyphicon-film"></span>
 								<strong>rip</strong>
 							</button>
 						</span>
-						<input type="text" id="text-rip-album" class="form-control" placeholder="http://www.xvideos.com/video1861562" autocomplete="off" value="">
+						<input type="text" id="text-rip-video" class="form-control" placeholder="http://www.xvideos.com/video1861562" autocomplete="off" value="">
 					</div> <!-- /input-group -->
-					<div class="statusbar" id="status-rip-album"></div>
+					<div class="statusbar" id="status-rip-video"></div>
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
-			<div class="container" id="video-container" style="display: none">
-				
+
+			<div class="container" id="video-info-container">
+				<h1 class="text-center" id="video-title">host <small>url</small></h1>
+				<div class="col-xs-12 col-lg-3">
+					<table cellpadding=5>
+						<tr>
+							<td colspan="2" class="text-right">
+								<span class="album-key" id="video-info-url" style="font-size: 1.8em"></span>
+								<p style="font-size: 0.8em">(right-click, "Save as...")
+							</td>
+						</tr><tr>
+							<td class="text-right">
+								<span class="album-key">size:</span>
+							</td><td class="text-left">
+								<span class="album-value" id="video-info-size">10.3mb</span>
+							</td>
+						</tr><tr>
+							<td class="text-right">
+								<span class="album-key">type:</span>
+							</td><td class="text-left">
+								<span class="album-value" id="video-info-type">mp4</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+
+				<div class="col-xs-12 col-lg-9" id="video-player-container">
+					<!-- Video to be inserted here -->
+				</div>
 			</div>
 		</div> <!-- /#page-video -->
 
@@ -222,7 +249,7 @@
 		<div class="container">
 			<div class="col-xs-12">
 				<footer>
-					<p>&copy; rarchives 2013
+					<p>&copy; rarchives 2014
 				</footer>
 			</div>
 		</div>

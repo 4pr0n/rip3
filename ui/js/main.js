@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	setupRipper();
+	setupRippers();
 	loadSiteStatuses();
 	pageChanged();
 });
@@ -21,7 +21,6 @@ function pageChanged() {
 	$('a:focus').blur(); // Blur focused link
 	var keys = getQueryHashKeys();
 	if      ('stats'   in keys) { showPage('page-stats'); }
-	else if ('video'   in keys) { showPage('page-video'); }
 	else if ('site'    in keys) { showPage('page-about-site'); }
 	else if ('terms'   in keys) { showPage('page-about-terms'); }
 	else if ('removal' in keys) { showPage('page-about-removal'); }
@@ -32,11 +31,14 @@ function pageChanged() {
 	else if ('album' in keys) {
 		loadAlbum(keys.album);
 	}
+	else if ('video'   in keys) {
+		showPage('page-video');
+		startVideoRip(keys['video']);
+	}
 	else if (window.location.hash.indexOf('.') >= 0) {
-		/* TODO */
 		// Page to rip
 		showPage('page-rip');
-		startRip(window.location.hash.substring(1));
+		startAlbumRip(window.location.hash.substring(1));
 	}
 	else {
 		showPage('page-rip');
@@ -459,7 +461,6 @@ function addAlbumImage(image) {
 		.appendTo( $('#album-container') )
 		.click(function(e) {
 			var imgdata = $(this).find('img').data('image');
-			console.log('imgdata', imgdata);
 			// Caption
 			var $caption = $('<div/>')
 				.append(
@@ -520,7 +521,7 @@ function getSpinner(size) {
 		});
 }
 
-function startRip(baseurl) {
+function startAlbumRip(baseurl) {
 	var url = decodeURIComponent(baseurl);
 	if (url.indexOf('http') != 0) {
 		url = 'http://' + url;
@@ -617,12 +618,11 @@ function getQueryHashKeys() {
 	if (a == "") return {};
 	var b = {};
 	for (var i = 0; i < a.length; ++i) {
-		var p=a[i].split('=');
-		if (p.length != 2) {
-			b[p[0]] = '';
-			continue;
-		}
-		b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+		var keyvalue = a[i].split('=');
+		var key = keyvalue[0];
+		keyvalue.shift(); // Remove first element (key)
+		var value = keyvalue.join('='); // Remaining elements are the value
+		b[key] = decodeURIComponent(value.replace(/\+/g, " "));
 	}
 	return b;
 }
@@ -632,7 +632,8 @@ function addCommas(x) {
 	return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function setupRipper() {
+function setupRippers() {
+	// Album ripper
 	$('#button-rip-album')
 		.click(function() {
 			$('#text-rip-album').blur();
@@ -644,6 +645,142 @@ function setupRipper() {
 		.keydown(function(e) {
 			if (e.keyCode === 13) {
 				$('#button-rip-album').click();
+			}
+		});
+
+	// Video ripper
+	$('#button-rip-video')
+		.click(function() {
+			$('#text-rip-video').blur();
+			var url = $('#text-rip-video').val()
+			// JS automatically converts encoded chars in hash
+			// So we're going to use a flag to denote &amp;
+			url = url.replace('&', '||AMP||'); 
+			window.location.hash = 'video=' + encodeURIComponent(url);
+		});
+	$('#text-rip-video')
+		.keydown(function(e) {
+			if (e.keyCode === 13) {
+				$('#button-rip-video').click();
+			}
+		});
+}
+
+function startVideoRip(url) {
+	url = url.replace('||AMP||', '&'); // Convert flags back to &amp;
+	$('#text-rip-video').val(decodeURIComponent(url));
+	$('#video-info-container')
+		.slideUp(200);
+	if (url === '') { return; }
+	url = encodeURIComponent(url);
+	$('#status-rip-video')
+		.removeClass()
+		.html(' getting video info...')
+		.prepend( getSpinner() )
+		.hide()
+		.slideDown(500);
+	$.getJSON('api.cgi?method=rip_video&url=' + url)
+		.fail(function() { /* TODO */ })
+		.done(function(json) {
+			if ('error' in json) {
+				// TODO show error
+				$('#status-rip-video')
+					.addClass('text-danger')
+					.html(json.error)
+					.hide()
+					.slideDown(200);
+				return;
+			}
+			$('#status-rip-video')
+				.removeClass()
+				.slideUp(200, function() { $(this).empty() });
+			$('#video-title').html(json.host + ' <small>' + json.url + '</small>');
+			$('#video-info-url')
+				.empty()
+				.append(
+					$('<a/>')
+						.data('url', json.url)
+						.attr('href', json.url)
+						.attr('rel', 'noreferrer')
+						.attr('target', '_BLANK_' + json.host)
+						.mousedown(function(e) {
+							if (e.which === 1) {
+								$(this)
+									.attr('href',
+										'data:text/html;charset=utf-8,\n\n' +
+										'<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=' +
+										json.url +
+										'\'></head><body><h1>redirecting...</h1></body></html>\n\n')
+							} else {
+								$(this).attr('href', $(this).data('url'));
+							}
+						})
+						.html('download')
+				);
+			$('#video-info-size')
+					.html( bytesToHR(json.size) );
+			$('#video-info-type')
+					.html(json.type);
+			$('#video-info-container')
+				.slideDown(500);
+
+			// Show video
+			$('#video-player-container').empty();
+			var $vid = $('<video/>');
+			if ( $vid[0].canPlayType('video/' + json.type) !== '') {
+				$vid
+					.attr('controls', 'controls')
+					.css('width', '100%')
+					.appendTo( $('#video-player-container') );
+				$('<source/>')
+					.attr('src', json.url)
+					.attr('type', 'video/' + json.type)
+					.appendTo( $vid );
+			}
+			else {
+				// Can't play this type, default to flash
+				var flowplayer_id = 'video-player-anchor',
+				    flowplayer_swf = 'ui/swf/flowplayer-3.2.18.swf',
+						flowplayer_config = {
+							onLoad: function() {
+								this.setVolume(30);
+							},
+							clip: {
+								autoPlay: false,
+								autoBuffering: true,
+								onMetaData: function(clip) {
+									var w = parseInt(clip.metaData.width, 100);
+									var h = parseInt(clip.metaData.height, 100);
+									var ratio = $(window).width() / w;
+									h = h * ratio;
+									$(this.getParent()).css({
+										width: w,
+										height: h
+									});
+								}
+							}
+						};
+				$vid.hide();
+				$('<a/>')
+					.attr('href', json.url)
+					.css({
+						'width'   : '100%',
+						'height'  : '400px',
+						'display' : 'block',
+						'margin'  : '10px auto'
+					})
+					.attr('id', flowplayer_id)
+					.appendTo( $('#video-player-container') );
+				if ( $('#video-script').size() == 0) {
+					$('<div id="video-script" style="display: none" />').appendTo( $('body') );
+					$.getScript('ui/js/flowplayer-3.2.13.min.js')
+						.done(function() {
+							flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
+						});
+				}
+				else {
+					flowplayer(flowplayer_id, flowplayer_swf, flowplayer_config);
+				}
 			}
 		});
 }
