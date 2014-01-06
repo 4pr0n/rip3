@@ -157,6 +157,7 @@ def get_album_info(keys):
 	from time import gmtime
 	from calendar import timegm
 	db.update('albums', 'accessed = ?', 'path like ?', [ timegm(gmtime()), keys['album'] ])
+	db.update('albums', 'views = views + 1', 'path like ?', [ keys['album'] ])
 	db.commit()
 
 	# ADMIN functions
