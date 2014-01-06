@@ -24,6 +24,7 @@ def main():
 	elif method == 'generate_zip':       return generate_zip(keys)
 	elif method == 'get_albums':         return get_albums(keys)
 	elif method == 'rip_video':          return rip_video(keys)
+	elif method == 'get_admin':          return {'admin': get_admin() }
 	else: return err('unsupported method: %s' % method)
 
 
@@ -48,19 +49,33 @@ def rip_album(keys):
 	if not 'url' in keys:
 		return err('url required')
 
+	from py.DB import DB
+	db = DB()
+
+	max_rips = db.get_config('max_rips')
+	if max_rips == None:
+		max_rips = MAX_RIPS
+
 	count = count_rips_by_user(keys)['count']
-	if count > MAX_RIPS:
-		return err('a maximum of %d active rips are allowed at any time. you currently have %d' % (MAX_RIPS, count))
+	if count > max_rips:
+		return err('a maximum of %d active rips are allowed at any time. you currently have %d' % (max_rips, count))
 
 	url = keys['url']
 	try:
 		from py.SiteBase import SiteBase
 		Ripper = SiteBase.get_ripper(url)
 		ripper = Ripper(url)
+
+		# Blacklist check
+		host = ripper.get_host()
+		album = ripper.get_album_name()
+		reason = db.select_one('reason', 'blacklist', 'host like ? and album like ?', [host, album])
+		if reason != None:
+			return err('album %s_%s is blacklisted because ' % (host, album, reason))
+
 		return ripper.start()
 	except Exception, e:
 		return err(str(e), tb=format_exc())
-
 
 def rip_video(keys):
 	if not 'url' in keys:
@@ -92,6 +107,7 @@ def get_album_progress(keys):
 	errored    = db.count('medias', 'album_id = ? and error is not null', [rowid])
 	inprogress = total - pending - completed - errored
 	elapsed    = timegm(gmtime()) - created
+	totalsize = db.select_one('filesize', 'albums', 'rowid = ?', [rowid])
 	return {
 		'album'      : keys['album'],
 		'total'      : total,
@@ -99,7 +115,8 @@ def get_album_progress(keys):
 		'completed'  : completed,
 		'errored'    : errored,
 		'inprogress' : inprogress,
-		'elapsed'    : elapsed
+		'elapsed'    : elapsed,
+		'filesize'   : totalsize
 	}
 	
 def get_album_info(keys):
@@ -107,7 +124,7 @@ def get_album_info(keys):
 		return err('album required')
 	q = '''
 		select 
-			name, url, host, ready, filesize, created, modified, count, zip, views, metadata
+			rowid, name, url, host, ready, filesize, created, modified, count, zip, views, metadata, author
 		from albums
 		where path like ?
 	'''
@@ -121,7 +138,7 @@ def get_album_info(keys):
 		response = err('album not found')
 		response['url'] = get_url_from_path(keys['album'])
 		return response
-	(name, url, host, ready, filesize, created, modified, count, zipfile, views, metadata) = one
+	(rowid, name, url, host, ready, filesize, created, modified, count, zipfile, views, metadata, author) = one
 	response = {
 		'album_name' : name,
 		'url' : url,
@@ -135,7 +152,64 @@ def get_album_info(keys):
 		'views' : views,
 		'metadata' : metadata
 	}
+
+	# Update album access time
+	from time import gmtime
+	from calendar import timegm
+	db.update('albums', 'accessed = ?', 'path like ?', [ timegm(gmtime()), keys['album'] ])
+	db.commit()
+
+	# ADMIN functions
+	admin_user = get_admin()
+	if admin_user != None:
+		q = 'select user, message from reports where album_id = ?'
+		reports = []
+		curexec = cur.execute(q, [rowid])
+		for (user, message) in curexec:
+			reports.append({
+				'ip' : user,
+				'message' : message
+			})
+		response['admin'] = {
+			'admin_user' : admin_user,
+			'album' : keys['album'],
+			'reports' : reports
+		}
+
+		author_rips = db.count('albums', 'author = ?', [author])
+
+		q = '''
+			select warning_message, warnings, warned, banned, banned_reason, banned_url
+			from users
+			where ip = ?
+		'''
+		curexec = cur.execute(q, [author])
+		one = curexec.fetchone()
+		if one == None:
+			response['admin']['user'] = {
+				'ip' : author,
+				'rip_count' : author_rips,
+				'warning_message' : None,
+				'warnings' : 0,
+				'warn_date' : 0,
+				'banned' : False,
+				'banned_reason' : None,
+				'banned_url' : None
+			}
+		else:
+			(warn_msg, warn_count, warn_date, banned, banned_reason, banned_url) = one
+			response['admin']['user'] = {
+				'ip' : author,
+				'rip_count' : author_rips,
+				'warning_message' : warn_msg,
+				'warnings' : warn_count,
+				'warn_date' : warn_date,
+				'banned' : (banned == 1),
+				'banned_reason' : banned_reason,
+				'banned_url' : banned_url
+			}
 	cur.close()
+
 	return response
 
 def get_album(keys):
@@ -174,11 +248,6 @@ def get_album(keys):
 			'metadata' : metadata
 		})
 	cur.close()
-	# Update modified time
-	from time import gmtime
-	from calendar import timegm
-	db.update('albums', 'modified = ?', 'path like ?', [ timegm(gmtime()), keys['album'] ])
-	db.commit()
 	return response
 
 def get_album_urls(keys):
@@ -272,6 +341,7 @@ def get_albums(keys):
 	cursor = db.conn.cursor()
 	curexec = cursor.execute(q, values)
 	result = []
+	admin_user = get_admin()
 	for (host, name, path, count, zipfile, reports, mediatype, image, w, h, thumb, tw, th) in curexec:
 		d = get_key_from_dict_list(result, path)
 		if not 'preview' in d[path]:
@@ -280,7 +350,6 @@ def get_albums(keys):
 				'name' : name,
 				'count' : count,
 				'zip' : zipfile,
-				'reports' : reports,
 				'preview' : []
 			}
 		d[path]['preview'].append({
@@ -292,6 +361,12 @@ def get_albums(keys):
 				't_width' : tw,
 				't_height' : th
 			})
+		if admin_user != None:
+			d[path]['admin'] = {
+				'admin_user' : admin_user,
+				'album'   : path,
+				'reports' : reports
+			}
 	return result
 
 def get_key_from_dict_list(lst, key):
@@ -353,12 +428,15 @@ def err(error, tb=None):
 		response['trace'] = tb.replace('\n', '<br>').replace(' ', '&nbsp;')
 	return response
 
-def is_admin():
-	db = DB()
-	the_password = db.get_config('admin_password')
+def get_admin():
 	cookies = get_cookies()
-	return 'rip_admin_password' in cookies and \
-	         cookies['rip_admin_password'] == the_password
+	cookie = cookies.get('rip_admin_password', None)
+	if cookie == None:
+		return None
+	from py.DB import DB
+	db = DB()
+	user = db.select_one('username', 'admins', 'cookie like ?', [cookie])
+	return user
 
 def get_keys(): # Get query keys
 	form = FieldStorage()

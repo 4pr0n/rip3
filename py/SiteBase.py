@@ -36,16 +36,16 @@ class SiteBase(object):
 		self.max_threads  = self.MAX_THREADS
 		self.threads      = []
 
-		try:
-			self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
-			self.path     = self.db.select_one('path',  'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
-			# Album already exists
-			self.album_exists = True
-		except:
+		self.album_id = self.db.select_one('rowid', 'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
+		self.path     = self.db.select_one('path',  'albums', 'host = ? and name = ?', [self.get_host(), self.get_album_name()])
+
+		if self.path == None:
 			# Album does not exist.
 			self.album_exists = False
-			self.album_id = None
 			self.path = '%s_%s' % (self.get_host(), self.album_name)
+		else:
+			# Album already exists
+			self.album_exists = True
 
 	@staticmethod
 	def get_ripper(url):

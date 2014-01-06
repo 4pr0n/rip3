@@ -52,19 +52,14 @@ function pageChanged() {
 }
 
 function loadAlbums() {
-	showPage('page-albums');
 	var scrollTop = $('#page-albums').data('scroll');
-	if (scrollTop !== undefined) {
-		$('html,body')
-			.animate({
-				'scrollTop': scrollTop,
-			}, 200);
+	if (scrollTop === undefined) {
+		scrollTop = 0;
 	}
-
 	$(window)
 		.unbind('scroll')
 		.scroll(albumsScrollHandler);
-	albumsScrollHandler();
+	showPage('page-albums', scrollTop, albumsScrollHandler);
 }
 
 function addAlbumPreview(path, album) {
@@ -271,7 +266,9 @@ function loadAlbum(album) {
 							.empty()
 							.append( getSpinner() );
 						$.getJSON('api.cgi?method=generate_zip&album=' + encodeURIComponent($('#album-container').data('album')['album']))
-							.fail(function() { /* TODO */ })
+							.fail(function() {
+								$('#album-info-download').html('failed to create zip');
+							})
 							.done(function(json) {
 								$('<a/>')
 									.attr('href', json.zip)
@@ -309,9 +306,14 @@ function loadAlbum(album) {
 }
 
 function checkAlbumProgress(album) {
+	if ( !$('#page-album').is(':visible') ) {
+		// Stop if the page is no longer visible (user clicked away)
+		return;
+	}
 	$.getJSON('api.cgi?method=get_album_progress&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
+			$('#album-info-size').html(json.total + ' images <small>(' + bytesToHR(json.filesize) + ')</small>');
 			if (json.completed + json.errored >= json.total) {
 				// Album is completed, show album
 				$('#page-album span, #page-album button, #album-info-name').slideDown(200);
@@ -596,11 +598,14 @@ function abortRip() {
 }
 
 /** Hide current page, show page with 'id' */
-function showPage(id) {
+function showPage(id, scrollTo, callback) {
+	if (scrollTo === undefined) scrollTo = 0;
 	if ( $('body [id^="page-"]:visible').attr('id') === id) {
 		// Page is already showing
-		// Scroll up
-		$('html,body').stop().animate({ 'scrollTop': 0 }, 500);
+		$('html,body').stop().animate({ 'scrollTop': scrollTo }, 500);
+		if (callback !== undefined) {
+			callback();
+		}
 		return;
 	}
 	// Hide current page(s)
@@ -611,7 +616,7 @@ function showPage(id) {
 			$('#' + id)
 				.stop()
 				.hide()
-				.slideDown(500);
+				.slideDown(500, callback);
 		});
 
 	// Deselect nav-bar
@@ -621,7 +626,7 @@ function showPage(id) {
 	if ( $('.navbar-collapse').hasClass('in') ) {
 		$('.navbar-toggle').click();
 	}
-	$('html,body').stop().animate({ 'scrollTop': 0 }, 500);
+	$('html,body').stop().animate({ 'scrollTop': scrollTo }, 500, callback);
 }
 
 /* Convert keys in hash to JS object */

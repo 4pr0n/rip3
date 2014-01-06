@@ -309,14 +309,12 @@ class DB:
 	
 	def select_one(self, what, table, where='', values=[]):
 		'''
-			Selects the first column of the first row of a SELECt query
-
-			Raises:
-				Exception if no rows are returned, or errors occured during select() call
+			Selects the first column of the first row of a SELECT query
+			Returns the first column, or None if no rows were returned.
 		'''
 		ex = self.select(what, table, where, values).fetchone()
 		if ex == None:
-			raise Exception('no rows returned')
+			return None
 		return ex[0]
 
 	def delete(self, table, where, values=[]):
