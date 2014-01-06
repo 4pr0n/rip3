@@ -25,6 +25,7 @@ def main():
 	elif method == 'get_albums':         return get_albums(keys)
 	elif method == 'rip_video':          return rip_video(keys)
 	elif method == 'get_admin':          return {'admin': get_admin() }
+	elif method == 'report_album':       return report_album(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -160,12 +161,18 @@ def get_album_info(keys):
 	db.update('albums', 'views = views + 1', 'path like ?', [ keys['album'] ])
 	db.commit()
 
+	# Check if current user already reported the album
+	user   = keys.get('user', environ.get('REMOTE_ADDR', '0.0.0.0'))
+	report = db.select_one('message', 'reports', 'album like ? and user like ?', [ keys['album'], user ])
+	if report != None:
+		response['already_reported'] = report
+
 	# ADMIN functions
 	admin_user = get_admin()
 	if admin_user != None:
-		q = 'select user, message from reports where album_id = ?'
+		q = 'select user, message from reports where album like ?'
 		reports = []
-		curexec = cur.execute(q, [rowid])
+		curexec = cur.execute(q, [ keys['album'] ])
 		for (user, message) in curexec:
 			reports.append({
 				'ip' : user,
@@ -419,6 +426,27 @@ def generate_zip(keys):
 		'filesize' : path.getsize(zip_path)
 	}
 
+def report_album(keys):
+	if 'album' not in keys:
+		return err('album is required')
+
+	album  = keys['album']
+	reason = keys.get('reason', None)
+	user   = keys.get('user', environ.get('REMOTE_ADDR', '0.0.0.0'))
+
+	from py.DB import DB
+	db = DB()
+	if db.count('albums', 'path like ?', [album]) == 0:
+		return err('album not found; unable to report')
+
+	previous_reason = db.select_one('message', 'reports', 'album like ? and user like ?', [album, user])
+	if previous_reason != None:
+		return err('already reported with reason "%s"' % previous_reason)
+
+	db.insert('reports', [album, user, reason])
+	db.update('albums', 'reports = reports + 1', 'path like ?', [album])
+	db.commit()
+	return err('album has been reported. the admins will look into this soon.')
 
 ###################
 # HELPER METHODS

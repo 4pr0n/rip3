@@ -102,29 +102,88 @@
 
 		<!-- Albums page (singular) -->
 		<div id="page-album" style="display: none">
-			<div class="jumbotron">
+			<div class="jumbotron" style="padding-bottom: 10px">
 				<div class="container">
 					<h1 class="title text-left" id="album-info-name">
 						album
 						<small>host</small>
 					</h1>
-					<p>
-					<span class="album-key">source:</span>
-					<span class="album-value" id="album-info-source"></span>
-					<p>
-					<span class="album-key">download:</span>
-					<span class="album-value" id="album-info-download"></span>
-					<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">urls (source)</button>
-					<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">urls (rarchives)</button>
-					<div id="album-info-urls" style="display: none">
-						<textarea class="input-sm" id="album-info-urls-text" rows="20" style="width: 100%"></textarea>
-					</div>
-					<p>
-					<span class="album-key">size:</span>
-					<span class="album-value" id="album-info-size"></span>
-					<p>
-					<span class="album-key">created:</span>
-					<span class="album-value" id="album-info-created"></span>
+
+					<div id="album-info-rerip" style="display: none"></div>
+					<table class="table table-condensed" id="album-info-table">
+						<tr>
+							<td class="album-key text-right" style="padding-right: 10px;">source:</td>
+							<td class="album-value text-left" id="album-info-source"></td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">images:</td>
+							<td class="album-value text-left" id="album-info-size"></td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px; vertical-align: middle">download:</td>
+							<td class="album-value text-left" id="album-info-download"></td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">urls:</td>
+							<td class="album-value">
+								<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">urls (source)</button>
+								<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">urls (rarchives)</button>
+							</td>
+						</tr><tr>
+							<td></td>
+							<td id="album-info-urls" style="display: none">
+								<textarea class="input-sm" id="album-info-urls-text" rows="20" style="width: 100%"></textarea>
+							</td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">created:</td>
+							<td class="album-value text-left" id="album-info-created"></td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;"></td>
+							<td class="album-value text-left">
+								<button class="btn btn-sm btn-danger" id="album-report-drop" onclick="$(this).hide(); $('#album-report').slideDown(200)" type="button"><span class="glyphicon glyphicon-flag"></span> report this album</button>
+								<div class="col-xs-12 col-md-6" id="album-report" style="display: none">
+									<div class="input-group input-group-sm">
+										<span class="input-group-btn">
+											<button id="album-report-button" class="btn btn-danger" type="button">
+												<span class="glyphicon glyphicon-flag"></span>
+												<strong>report</strong>
+											</button>
+										</span>
+										<input type="text" id="album-report-text" class="form-control" placeholder="reason" autocomplete="off" value="">
+										<span class="input-group-btn">
+											<button type="button" onclick="$('#album-report').hide(); $('#album-report-drop').slideDown(200)" class="btn btn-primary"><span class="glyphicon glyphicon-remove"></span></button>
+										</span>
+									</div> <!-- /input-group -->
+								</div> <!-- /album-report -->
+							</td>
+						</tr>
+					</table>
+					
+					<table class="table table-condensed" id="admin-info-table" style="display: none">
+						<tr>
+							<td class="text-left" colspan="2">
+								<b>admin functions</b>
+							</td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">user:</td>
+							<td class="album-value text-left">
+								<span class="text-danger" id="admin-info-user">127.0.0.1</span>
+								<button type="button" class="btn btn-xs btn-warning" id="admin-info-warn">warn</button>
+								<button type="button" class="btn btn-xs btn-danger" id="admin-info-ban">ban</button>
+							</td>
+						</tr><tr id="admin-info-banned">
+							<td class="album-key text-right" style="padding-right: 10px;">banned:</td>
+							<td class="album-value text-left text-danger" id="admin-info-banned-reason"></td>
+						</tr><tr id="admin-info-warned">
+							<td class="album-key text-right" style="padding-right: 10px;">warned:</td>
+							<td class="album-value text-left text-danger" id="admin-info-warned-reason"></td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">number of rips:</td>
+							<td class="album-value text-left" id="admin-info-rip-count">0</td>
+						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">reports:</td>
+							<td class="album-value text-left text-danger" id="admin-info-reports"></td>
+						</tr>
+					</table>
+					<!-- report -->
+
 					<div id="album-progress-container" style="display: none">
 						<h2>ripping progress</h2>
 						<p>
@@ -185,20 +244,20 @@
 					<table cellpadding=5>
 						<tr>
 							<td colspan="2" class="text-center">
-								<a class="btn btn-xs btn-primary" id="video-info-url" style="font-size: 1.8em"><span class="glyphicon glyphicon-download"></span> <b>download</b></a>
+								<a class="btn btn-xs btn-primary" id="video-info-url" style="padding: 10px !important; font-size: 1.8em"><span class="glyphicon glyphicon-download"></span> <b>download</b></a>
 								<div style="font-size: 0.8em; margin-top: 5px">(right-click, "Save as...")</div>
 							</td>
 						</tr><tr>
 							<td class="text-right">
-								<span class="album-key">size:</span>
+								<span ><b>size:</b></span>
 							</td><td class="text-left">
-								<span class="album-value" id="video-info-size">10.3mb</span>
+								<span id="video-info-size">10.3mb</span>
 							</td>
 						</tr><tr>
 							<td class="text-right">
-								<span class="album-key">type:</span>
+								<span><b>type:</b></span>
 							</td><td class="text-left">
-								<span class="album-value" id="video-info-type">mp4</span>
+								<span id="video-info-type">mp4</span>
 							</td>
 						</tr>
 					</table>
@@ -208,6 +267,7 @@
 					<!-- Video to be inserted here -->
 					<div id="video-player-source"></div>
 				</div>
+				<hr>
 			</div>
 
 			<div class="container" id="supported-video-container">

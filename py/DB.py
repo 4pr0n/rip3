@@ -77,11 +77,11 @@ SCHEMA = {
 		'checked   integer',   # Date last checked for availability
 
 	'reports' :
-		'album_id integer,' +
+		'album    text,' +
 		'user     text,' +
 		'message  text,' +
-		'foreign key(album_id) references albums(rowid),' +
-		'primary key(album_id, user)',
+		'foreign key(album) references albums(path),' +
+		'primary key(album, user)',
 
 	'blacklist' :
 		'host    text,' + # Name of host 
