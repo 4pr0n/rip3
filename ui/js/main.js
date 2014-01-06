@@ -124,6 +124,7 @@ function addAlbumPreview(path, album) {
 					.empty()
 					.append( $full )
 					.stop()
+					.slideDown(200)
 					.click(function() {
 						$(this).stop().slideUp(200)
 					});
