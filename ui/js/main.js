@@ -29,7 +29,7 @@ function pageChanged() {
 	else if ('removal' in keys) { showPage('page-about-removal'); }
 	else if ('code'    in keys) { showPage('page-about-code'); }
 	else if ('albums'  in keys) {
-		loadAlbums();
+		loadAlbums(keys);
 	}
 	else if ('album' in keys) {
 		loadAlbum(keys.album);
@@ -51,7 +51,7 @@ function pageChanged() {
 	}
 }
 
-function loadAlbums() {
+function loadAlbums(keys) {
 	var scrollTop = $('#page-albums').data('scroll');
 	if (scrollTop === undefined) {
 		scrollTop = 0;
@@ -170,7 +170,9 @@ function loadMoreAlbums() {
 			if (json === null) { json = {'error' : 'null response'}; }
 			if ('error' in json) {
 				// TODO Handle error
-				$('#album-info-name').html(json.error + ' <small>error</small>');
+				$('#album-info-name')
+					.html(json.error + ' <small>error</small>')
+					.slideDown(200);
 				throw new Error(json.error);
 			}
 			for (var i in json) {
@@ -219,7 +221,7 @@ function loadAlbum(album) {
 		})
 		.empty();
 	// Album info
-	$('#album-info-table,#admin-info-table,#album-status,#album-info-rerip').slideUp(200);
+	$('#album-info-table,#admin-info-table,#album-status,#album-info-rerip,#album-info-name').slideUp(200);
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -227,7 +229,7 @@ function loadAlbum(album) {
 			if ('error' in json) {
 				$('#album-info-name')
 					.html(json.error + ' <small>error</small>')
-					.slideDown(500);
+					.slideDown(200);
 				if ('url' in json) {
 					// Error contains a 'url'
 					// TODO insert this below the album name
@@ -251,7 +253,9 @@ function loadAlbum(album) {
 			}
 			// ALBUM INFO
 			$('#album-info-table').slideDown(200);
-			$('#album-info-name').html('<small>' + json.host + '/</small> ' + json.album_name);
+			$('#album-info-name')
+				.html('<small>' + json.host + '/</small> ' + json.album_name)
+				.slideDown(200);
 			$('#album-info-source')
 				.empty()
 				.append(
@@ -354,7 +358,8 @@ function loadAlbum(album) {
 						.removeClass('text-danger')
 						.addClass('text-warning')
 						.html('(none)');
-				} else {
+				}
+				else {
 					$('#admin-info-reports')
 						.removeClass('text-success')
 						.addClass('text-danger')
@@ -491,7 +496,9 @@ function loadAlbumImages() {
 		.done(function(json) {
 			if ('error' in json) {
 				// TODO Handle error
-				$('#album-info-name').html(json.error + ' <small>error</small>');
+				$('#album-info-name')
+					.html(json.error + ' <small>error</small>')
+					.slideDown(200);
 				throw new Error(json.error);
 			}
 			var image;
@@ -697,7 +704,14 @@ function showPage(id, scrollTo, callback) {
 			$('#' + id)
 				.stop()
 				.hide()
-				.slideDown(500, callback);
+				.slideDown(400, function() {
+					$('html,body')
+						.stop()
+						.animate({ 'scrollTop': scrollTo }, 200);
+					if (callback !== undefined) {
+						callback();
+					}
+				})
 		});
 
 	// Deselect nav-bar
@@ -707,7 +721,6 @@ function showPage(id, scrollTo, callback) {
 	if ( $('.navbar-collapse').hasClass('in') ) {
 		$('.navbar-toggle').click();
 	}
-	$('html,body').stop().animate({ 'scrollTop': scrollTo }, 500, callback);
 }
 
 /* Convert keys in hash to JS object */

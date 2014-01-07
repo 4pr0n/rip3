@@ -36,10 +36,10 @@
 				</div>
 				<div class="collapse navbar-collapse">
 					<ul class="nav navbar-nav">
-						<li><a href="#rip" id="nav-rip"><span class="glyphicon glyphicon-cloud-download"></span> rip</a></li>
+						<li><a href="#"       id="nav-rip"><span class="glyphicon glyphicon-cloud-download"></span> rip</a></li>
 						<li><a href="#albums" id="nav-albums"><span class="glyphicon glyphicon-picture"></span> albums</a></li>
-						<li><a href="#video" id="nav-video"><span class="glyphicon glyphicon-film"></span> video</a></li>
-						<li><a href="#stats" id="nav-stats"><span class="glyphicon glyphicon-stats"></span> stats</a></li>
+						<li><a href="#video"  id="nav-video"><span class="glyphicon glyphicon-film"></span> video</a></li>
+						<li><a href="#stats"  id="nav-stats"><span class="glyphicon glyphicon-stats"></span> stats</a></li>
 
 						<!-- ABOUT -->
 						<li class="dropdown">
@@ -61,8 +61,9 @@
 			</div> <!-- /.container -->
 		</div> <!-- /.navbar -->
 
+		<div id="page-"></div>
 		<!-- Rip page -->
-		<div id="page-rip">
+		<div id="page-rip" style="display: none">
 			<div class="jumbotron">
 				<div class="container text-center">
 					<h1 class="title"><span class="glyphicon glyphicon-cloud-download"></span><br> album ripper</h1>
@@ -165,8 +166,35 @@
 							<td class="album-key text-right" style="padding-right: 10px;">user:</td>
 							<td class="album-value text-left">
 								<span class="text-danger" id="admin-info-user">127.0.0.1</span>
-								<button type="button" class="btn btn-xs btn-warning" id="admin-info-warn">warn</button>
-								<button type="button" class="btn btn-xs btn-danger" id="admin-info-ban">ban</button>
+
+								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-warn-form').slideDown(200)" class="btn btn-xs btn-warning" id="admin-warn">warn</button>
+								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-ban-form').slideDown(200)" class="btn btn-xs btn-danger" id="admin-ban">ban</button>
+								<div class="input-group input-group-sm" id="admin-warn-form" style="display: none">
+									<span class="input-group-btn">
+										<button id="album-warn-button" class="btn btn-danger" type="button">
+											<span class="glyphicon glyphicon-flag"></span>
+											<strong>warn user</strong>
+										</button>
+									</span>
+									<input type="text" id="album-warn-text" class="form-control" placeholder="warning message" autocomplete="off" value="">
+									<span class="input-group-btn">
+										<button type="button" onclick="$('#admin-warn-form').hide(); $('#admin-warn,#admin-ban').slideDown(200)" class="btn btn-primary"><span class="glyphicon glyphicon-remove"></span></button>
+									</span>
+								</div> <!-- /input-group -->
+
+								<div class="input-group input-group-sm" id="admin-ban-form" style="display: none">
+									<span class="input-group-btn">
+										<button id="album-ban-button" class="btn btn-danger" type="button">
+											<span class="glyphicon glyphicon-flag"></span>
+											<strong>ban user</strong>
+										</button>
+									</span>
+									<input type="text" id="album-ban-text" class="form-control" placeholder="ban message" autocomplete="off" value="">
+									<span class="input-group-btn">
+										<button type="button" onclick="$('#admin-ban-form').hide(); $('#admin-warn,#admin-ban').slideDown(200)" class="btn btn-primary"><span class="glyphicon glyphicon-remove"></span></button>
+									</span>
+								</div> <!-- /input-group -->
+
 							</td>
 						</tr><tr id="admin-info-banned">
 							<td class="album-key text-right" style="padding-right: 10px;">banned:</td>

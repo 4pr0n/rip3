@@ -403,3 +403,7 @@ td {
 #video-info-size, #video-info-type {
 	font-size: 1.2em;
 }
+
+li a {
+	text-shadow: none !important;
+}
