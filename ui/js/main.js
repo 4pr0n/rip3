@@ -164,6 +164,7 @@ function loadMoreAlbums() {
 		return;
 	}
 	$('#page-albums').data('loading', true);
+	$('#albums-status').html( getSpinner(100) );
 	$.getJSON('api.cgi?' + $.param(params))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -187,7 +188,10 @@ function loadMoreAlbums() {
 				$(window).unbind('scroll');
 			}
 			$('#albums-status')
-				.html('loaded ' + (params.start - (params.count - json.length)) + ' albums');
+				.fadeOut(200, function() {
+					$(this).fadeIn(200);
+					$(this).html('loaded ' + (params.start - (params.count - json.length)) + ' albums');
+				})
 			setTimeout(function() {
 				$('#page-albums').data('loading', false);
 				albumsScrollHandler();
@@ -386,6 +390,7 @@ function checkAlbumProgress(album) {
 		$('#page-album').data('progressing', false);
 		return;
 	}
+	$('#album-info-table').slideUp(200);
 	$.getJSON('api.cgi?method=get_album_progress&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -400,7 +405,8 @@ function checkAlbumProgress(album) {
 					.scroll(albumScrollHandler);
 				return;
 			}
-			// Album is still in progress, show status
+			// Album is still in progress, hide fields and show status
+			$('#admin-info-table').slideUp(200);
 			$('#album-progress-container')
 				.slideDown(200)
 				.data('album', album);
@@ -491,6 +497,7 @@ function loadAlbumImages() {
 		count  : albumdata.count
 	}
 	albumdata.start += albumdata.count;
+	$('#album-status').html( getSpinner(100) );
 	$.getJSON('api.cgi?' + $.param(params))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {

@@ -404,6 +404,9 @@ td {
 	font-size: 1.2em;
 }
 
-li a {
+ul li {
 	text-shadow: none !important;
+}
+ul.dropdown-menu {
+	box-shadow: 0 10px 15px black !important;
 }

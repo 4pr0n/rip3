@@ -92,11 +92,64 @@
 		<!-- Albums page (multiple) -->
 		<div id="albums-image"></div> <!-- for displaying images from album previews -->
 		<div id="page-albums" style="display: none">
-			<div class="jumbotron">
+			<div class="jumbotron" style="margin-bottom: 10px">
 				<div class="container text-center">
 					<h1 class="title"><span class="glyphicon glyphicon-picture"></span> <br>ripped albums</h1>
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
+
+			<div class="row" style="margin-bottom: 10px">
+				<div class="container">
+					<!-- Sort -->
+					<div class="col-xs-12 col-sm-4 text-center">
+						<h3 class="glyphicon glyphicon-sort" style="vertical-align: bottom"></h3>
+						<div class="btn-group">
+							<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+								accessed <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu text-left" role="menu">
+								<li role="presentation" class="dropdown-header">sort by:</li>
+								<li><a id="albums-sort-accessed" href="#">last-viewed</a></li>
+								<li><a id="albums-sort-created" href="#">created</a></li>
+								<li><a id="albums-sort-views" href="#">views</a></li>
+								<li><a id="albums-sort-size" href="#">size</a></li>
+							</ul>
+						</div>
+					</div>
+
+					<!-- Order -->
+					<div class="col-xs-12 col-sm-4 text-center">
+						<h3 class="glyphicon glyphicon-sort-by-attributes" style="vertical-align: bottom"></h3>
+						<div class="btn-group">
+							<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+								ascending <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu text-left" role="menu">
+								<li role="presentation" class="dropdown-header">order by:</li>
+								<li><a id="albums-order-asc" href="#">ascending</a></li>
+								<li><a id="albums-order-desc" href="#">descending</a></li>
+							</ul>
+						</div>
+					</div>
+
+					<!-- Filter -->
+					<div class="col-xs-12 col-sm-4 text-center">
+						<h3 class="glyphicon glyphicon-filter" style="vertical-align: bottom"></h3>
+						<div class="btn-group">
+							<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+								none <span class="caret"></span>
+							</button>
+							<ul class="dropdown-menu text-left" role="menu">
+								<li role="presentation" class="dropdown-header">filter by:</li>
+								<li><a id="albums-filter-none" href="#">none</a></li>
+								<li><a id="albums-filter-mine" href="#">my rips</a></li>
+								<li><a id="albums-filter-site-" href="#">site</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div> <!-- sort row -->
+
 			<div id="albums-container"></div> <!-- for displaying album previews -->
 			<div id="albums-status" class="col-xs-12 text-center"></div> <!-- status of loaded albums -->
 		</div> <!-- /#page-albums -->
