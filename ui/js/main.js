@@ -329,13 +329,14 @@ function loadAlbum(album) {
 							.done(function(json) {
 								$('<button/>')
 									.attr('type', 'button')
-									.addClass('btn btn-xs btn-primary')
+									.addClass('btn btn-sm btn-primary')
 									.data('zip', json.zip)
 									.click(function() {
 										window.location.href = $(this).data('zip');
 									})
 									.html('<b>zip <span class="glyphicon glyphicon-compressed"></span></b>')
 									.appendTo( $('#album-info-download').empty() );
+								window.location.href = json.zip;
 							});
 					})
 					.appendTo( $('#album-info-download') );
