@@ -98,58 +98,54 @@
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
 
-			<div class="row" style="margin-bottom: 10px">
-				<div class="container">
-
-					<!-- Filter -->
-					<div class="col-xs-12 col-sm-4 text-center">
-						<h3 class="glyphicon glyphicon-filter" style="vertical-align: bottom"></h3>
-						<div class="btn-group">
-							<button id="filter-button" filtername="none" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-								no filter <span class="caret"></span>
-							</button>
-							<ul id="album-filter" class="dropdown-menu text-left" role="menu">
-								<li role="presentation" class="dropdown-header">filter by:</li>
-								<li><a id="albums-filter-none" filtername="none">no filter</a></li>
-								<li class="divider"></li>
-								<li><a id="albums-filter-mine" filtername="mine">my rips</a></li>
-								<li class="divider"></li>
-							</ul>
-						</div>
+			<div class="container" style="margin-bottom: 10px; margin-top: -20px">
+				<!-- Filter -->
+				<div class="col-xs-12 col-sm-4 text-center">
+					<h3 class="glyphicon glyphicon-filter" style="vertical-align: bottom"></h3>
+					<div class="btn-group">
+						<button id="filter-button" filtername="none" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+							no filter <span class="caret"></span>
+						</button>
+						<ul id="album-filter" class="dropdown-menu text-left" role="menu">
+							<li role="presentation" class="dropdown-header">filter by:</li>
+							<li><a id="albums-filter-none" filtername="none">no filter</a></li>
+							<li class="divider"></li>
+							<li><a id="albums-filter-mine" filtername="mine">my rips</a></li>
+							<li class="divider"></li>
+						</ul>
 					</div>
+				</div>
 
-					<!-- Sort -->
-					<div class="col-xs-12 col-sm-4 text-center">
-						<h3 class="glyphicon glyphicon-sort" style="vertical-align: bottom"></h3>
-						<div class="btn-group">
-							<button id="sort-button" filtername="accessed" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-								last-viewed <span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu text-left" role="menu">
-								<li role="presentation" class="dropdown-header">sort by:</li>
-								<li><a id="albums-sort-accessed" filername="accessed">last-viewed</a></li>
-								<li><a id="albums-sort-created" filername="created">created</a></li>
-								<li><a id="albums-sort-views" filtername="views">views</a></li>
-								<li><a id="albums-sort-count" filtername="count">size</a></li>
-							</ul>
-						</div>
+				<!-- Sort -->
+				<div class="col-xs-12 col-sm-4 text-center">
+					<h3 class="glyphicon glyphicon-sort" style="vertical-align: bottom"></h3>
+					<div class="btn-group">
+						<button id="sort-button" filtername="accessed" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+							last-viewed <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu text-left" role="menu">
+							<li role="presentation" class="dropdown-header">sort by:</li>
+							<li><a id="albums-sort-accessed" filername="accessed">last-viewed</a></li>
+							<li><a id="albums-sort-created" filername="created">created</a></li>
+							<li><a id="albums-sort-views" filtername="views">views</a></li>
+							<li><a id="albums-sort-count" filtername="count">size</a></li>
+						</ul>
 					</div>
+				</div>
 
-					<!-- Order -->
-					<div class="col-xs-12 col-sm-4 text-center">
-						<h3 id="filter-sort-glyph" class="glyphicon glyphicon-sort-by-attributes-alt" style="vertical-align: bottom"></h3>
-						<div class="btn-group">
-							<button id="order-button" filtername="descending" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-								descending <span class="caret"></span>
-							</button>
-							<ul class="dropdown-menu text-left" role="menu">
-								<li role="presentation" class="dropdown-header">order by:</li>
-								<li><a id="albums-order-desc" filtername="desc">descending</a></li>
-								<li><a id="albums-order-asc" filtername="asc">ascending</a></li>
-							</ul>
-						</div>
+				<!-- Order -->
+				<div class="col-xs-12 col-sm-4 text-center">
+					<h3 id="filter-sort-glyph" class="glyphicon glyphicon-sort-by-attributes-alt" style="vertical-align: bottom"></h3>
+					<div class="btn-group">
+						<button id="order-button" filtername="descending" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+							descending <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu text-left" role="menu">
+							<li role="presentation" class="dropdown-header">order by:</li>
+							<li><a id="albums-order-desc" filtername="desc">descending</a></li>
+							<li><a id="albums-order-asc" filtername="asc">ascending</a></li>
+						</ul>
 					</div>
-
 				</div>
 			</div> <!-- sort row -->
 
