@@ -304,8 +304,8 @@ def get_albums(keys):
 	host    = keys.get('host', None)
 	author  = keys.get('author', None)
 
-	orderby = keys.get('order', None)
-	ascdesc = keys.get('sort', None)
+	orderby = keys.get('sort', None)
+	ascdesc = keys.get('order', None)
 
 	wheres = []
 	values = []
@@ -313,6 +313,8 @@ def get_albums(keys):
 		wheres.append('host like ?')
 		values.append(host)
 	if author != None:
+		if author == 'mine':
+			author = environ.get('REMOTE_ADDR', '0.0.0.0')
 		wheres.append('author like ?')
 		values.append(author)
 	where = ''
@@ -321,10 +323,9 @@ def get_albums(keys):
 
 	if orderby == None or orderby not in ['accessed', 'created', 'host', 'reports', 'count', 'views']:
 		orderby = 'accessed'
+	if ascdesc == None or ascdesc not in ['asc', 'desc']:
 		ascdesc = 'desc'
-	else:
-		if ascdesc == None or ascdesc not in ['asc', 'desc']:
-			ascdesc = 'desc'
+
 	q = '''
 		select
 			a.host, a.name, a.path, a.count, a.zip, a.reports,
@@ -375,7 +376,20 @@ def get_albums(keys):
 				'album'   : path,
 				'reports' : reports
 			}
-	return result
+	response = {
+		'albums' : result,
+		'author' : keys.get('author', None)
+	}
+
+	# Provide list of supported sites on first request only
+	if int(keys.get('start', '0')) == 0 and keys.get('host', None) == None and keys.get('author', None) == None and keys.get('sort', None) == None and keys.get('order', None) == None:
+		from py.SiteBase import SiteBase
+		#           wow
+		#                        so 1line
+		#   such pythonic
+		response['sites'] = [x.get_host() for x in SiteBase.iter_rippers()]
+		#                    hexplode
+	return response
 
 def get_key_from_dict_list(lst, key):
 	for d in lst:

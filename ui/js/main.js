@@ -1,5 +1,6 @@
 $(document).ready(function() {
 	setupRippers();
+	setupAlbumFilters();
 	loadSiteStatuses();
 	pageChanged();
 });
@@ -176,26 +177,46 @@ function loadMoreAlbums() {
 					.slideDown(200);
 				throw new Error(json.error);
 			}
-			for (var i in json) {
-				var path;
-				for (path in json[i]) break; // Get first (only) key
-				var album = json[i][path];
-				addAlbumPreview(path, album);
+			if ('albums' in json) {
+				for (var i in json.albums) {
+					var path;
+					for (path in json.albums[i]) break; // Get first (only) key
+					var album = json.albums[i][path];
+					addAlbumPreview(path, album);
+				}
+				if (json.albums.length < params.count) {
+					// We got empty/partial response. Means we're done
+					$('#page-albums').data('params').finished = true;
+					$(window).unbind('scroll');
+				}
+				$('#albums-status')
+					.fadeOut(200, function() {
+						$(this).fadeIn(200);
+						$(this).html('loaded ' + (params.start - (params.count - json.albums.length)) + ' albums');
+					})
+				setTimeout(function() {
+					$('#page-albums').data('loading', false);
+					albumsScrollHandler();
+				}, 500);
 			}
-			if (json.length < params.count) {
-				// We got empty/partial response. Means we're done
-				$('#page-albums').data('params').finished = true;
-				$(window).unbind('scroll');
+			// Add list of hosts to albums filter
+			if ('sites' in json) {
+				for (var i in json.sites) {
+					$('<a/>')
+						.attr('id', 'albums-filter-' + json.sites[i])
+						.html(json.sites[i])
+						.click(function() {
+							$('#filter-button')
+								.attr('filtername', this.innerHTML)
+								.html( this.innerHTML );
+							applyAlbumsFilter();
+						})
+						.appendTo(
+							$('<li/>')
+								.appendTo( $('ul#album-filter') )
+						)
+				}
 			}
-			$('#albums-status')
-				.fadeOut(200, function() {
-					$(this).fadeIn(200);
-					$(this).html('loaded ' + (params.start - (params.count - json.length)) + ' albums');
-				})
-			setTimeout(function() {
-				$('#page-albums').data('loading', false);
-				albumsScrollHandler();
-			}, 500);
 		});
 	// Set next value
 	params.start += params.count;
@@ -488,13 +509,21 @@ function loadAlbumImages() {
 	var albumdata = $('#album-container').data('album');
 	if (albumdata.loading || albumdata.loaded) return;
 	albumdata.loading = true;
-	if (albumdata.start === undefined) albumdata.start = 0;
-	if (albumdata.count === undefined) albumdata.count = 12;
+	if (albumdata.start  === undefined) albumdata.start = 0;
+	if (albumdata.count  === undefined) albumdata.count = 12;
+	if (albumdata.sort   === undefined) albumdata.sort = 'accessed';
+	if (albumdata.order  === undefined) albumdata.order = 'descending';
+	if (albumdata.host   === undefined) albumdata.host = undefined;
+	if (albumdata.author === undefined) albumdata.author = undefined;
 	var params = {
 		method : 'get_album',
 		album  : encodeURIComponent(albumdata.album),
 		start  : albumdata.start,
-		count  : albumdata.count
+		count  : albumdata.count,
+		sort   : albumdata.sort,
+		order  : albumdata.order,
+		host   : albumdata.host,
+		author : albumdata.author
 	}
 	albumdata.start += albumdata.count;
 	$('#album-status').html( getSpinner(100) );
@@ -952,6 +981,57 @@ function reportAlbum(album, reason) {
 			$('#album-report-drop')
 				.html(json.error)
 		});
+}
+
+function setupAlbumFilters() {
+	var fields;
+	$.each($('#page-albums a[id^="albums-"]'), function(index, a) {
+		$(a).click(function() {
+			$(this)
+				.parent()
+				.parent()
+				.parent()
+				.find('button')
+					.html(this.innerHTML)
+					.attr('filtername', $(this).attr('filtername'));
+			applyAlbumsFilter();
+		});
+	});
+}
+
+function applyAlbumsFilter() {
+	var host = $('#filter-button').attr('filtername');
+	var author = host;
+	if (host === 'none') {
+		host   = undefined;
+		author = undefined;
+	}
+	else if (host === 'mine') {
+		host   = undefined;
+		author = 'mine';
+	}
+	else {
+		author = undefined;
+	}
+
+	$('#page-albums').data('params', {
+		'host'   : host,
+		'author' : author,
+		'sort'   : $('#sort-button').attr('filtername'),
+		'order'  : $('#order-button').attr('filtername'),
+		'start'  : 0,
+		'count'  : 6,
+		'method' : 'get_albums',
+		'finished' : undefined
+	})
+	.data('loading', undefined);
+
+	$('#albums-container')
+		.empty();
+	loadMoreAlbums();
+	$(window)
+		.unbind('scroll')
+		.scroll(albumsScrollHandler);
 }
 
 function bytesToHR(bytes) {
