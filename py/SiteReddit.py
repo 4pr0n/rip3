@@ -101,7 +101,7 @@ class SiteReddit(SiteBase):
 		# Comment
 		elif struct['kind'] == 't1':
 			# Add all URLs from comment
-			urls.extend(findall('(?P<url>https?://[^\s]*imgur.com\/[^\s]+)', struct['data']['body']))
+			urls.extend(findall('(?P<url>https?://[^\s]*imgur.com\/[^\s\)\]]+)', struct['data']['body']))
 			# Parse replies
 			replies = struct['data']['replies']
 			if replies != None and type(replies) == dict:
