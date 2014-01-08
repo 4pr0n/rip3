@@ -157,7 +157,6 @@ class SiteReddit(SiteBase):
 			return
 		if url in self.already_got:
 			return
-		self.already_got.append(url)
 
 		url = url.replace('/m.imgur.com', '/imgur.com')
 		url = url.replace('http://', '').replace('https://', '')
