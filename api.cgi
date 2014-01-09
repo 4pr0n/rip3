@@ -58,7 +58,7 @@ def rip_album(keys):
 		max_rips = MAX_RIPS
 
 	count = count_rips_by_user(keys)['count']
-	if count > max_rips:
+	if False and count > max_rips:
 		return err('a maximum of %d active rips are allowed at any time. you currently have %d' % (max_rips, count))
 
 	url = keys['url']

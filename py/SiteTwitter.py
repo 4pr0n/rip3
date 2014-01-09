@@ -157,7 +157,7 @@ class SiteTwitter(SiteBase):
 				self.parse_tweet(tweet)
 
 			# Load more if needed
-			if True or max_id == '0':
+			if max_id == '0':
 				break
 			sleep(SiteTwitter.SLEEP_TIME)
 
