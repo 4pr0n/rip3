@@ -410,3 +410,7 @@ ul li {
 ul.dropdown-menu {
 	box-shadow: 0 10px 15px black !important;
 }
+
+div p {
+	padding-left: 20px;
+}

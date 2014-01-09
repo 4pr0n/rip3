@@ -885,7 +885,7 @@ function startVideoRip(url) {
 
 			// Show video
 			$('#video-player-anchor').remove();
-			$('#video-player-container h3,p').remove();
+			$('#video-player-container').remove('h3,p');
 			$('<a/>')
 				.attr('href', json.source)
 				.attr('target', '_BLANK_' + json.host)
