@@ -988,12 +988,23 @@ function setupAlbumFilters() {
 	var fields;
 	$.each($('#page-albums a[id^="albums-"]'), function(index, a) {
 		$(a).click(function() {
+			if ( $(a).attr('filtername') === 'asc' ) {
+				$('#filter-sort-glyph')
+					.removeClass('glyphicon-sort-by-attributes-alt')
+					.addClass('glyphicon-sort-by-attributes');
+			}
+			else if ( $(a).attr('filtername') === 'desc' ) {
+				$('#filter-sort-glyph')
+					.removeClass('glyphicon-sort-by-attributes')
+					.addClass('glyphicon-sort-by-attributes-alt');
+			}
+
 			$(this)
 				.parent()
 				.parent()
 				.parent()
 				.find('button')
-					.html(this.innerHTML)
+					.html(this.innerHTML + ' <span class="caret"></span>')
 					.attr('filtername', $(this).attr('filtername'));
 			applyAlbumsFilter();
 		});

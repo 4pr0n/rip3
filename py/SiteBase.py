@@ -266,7 +266,7 @@ class SiteBase(object):
 		'''
 		if not getcwd().endswith('py'):
 			prefix = 'py.'
-		for mod in listdir(path.dirname(path.realpath(__file__))):
+		for mod in sorted(listdir(path.dirname(path.realpath(__file__)))):
 			if not mod.startswith('Site') or not mod.endswith('.py') or mod.startswith('SiteBase'):
 				continue
 			mod = mod[:-3]

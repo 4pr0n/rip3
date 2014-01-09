@@ -119,10 +119,12 @@ def get_album_progress(keys):
 		'elapsed'    : elapsed,
 		'filesize'   : totalsize
 	}
-	
+
+
 def get_album_info(keys):
 	if not 'album' in keys:
 		return err('album required')
+
 	q = '''
 		select 
 			rowid, name, url, host, ready, filesize, created, modified, count, zip, views, metadata, author
@@ -139,6 +141,7 @@ def get_album_info(keys):
 		response = err('album not found')
 		response['url'] = get_url_from_path(keys['album'])
 		return response
+
 	(rowid, name, url, host, ready, filesize, created, modified, count, zipfile, views, metadata, author) = one
 	response = {
 		'album_name' : name,
@@ -220,6 +223,7 @@ def get_album_info(keys):
 
 	return response
 
+
 def get_album(keys):
 	if not 'album' in keys:
 		return err('album required')
@@ -240,6 +244,10 @@ def get_album(keys):
 	curexec = cur.execute(q, [ keys['album'] ])
 	response = []
 	for (index, url, valid, error, filetype, name, width, height, filesize, thumb, twidth, theight, metadata, path) in curexec:
+		if thumb == 'nothumb.png':
+			thumb = './ui/images/%s' % thumb
+		else:
+			thumb = 'rips/%s/thumbs/%s' % (path, thumb)
 		response.append({
 			'index'    : index,
 			'url'      : url,
@@ -250,13 +258,14 @@ def get_album(keys):
 			'width'    : width,
 			'height'   : height,
 			'filesize' : filesize,
-			'thumb'    : 'rips/%s/thumbs/%s' % (path, thumb),
+			'thumb'    : thumb,
 			'twidth'   : twidth,
 			'theight'  : theight,
 			'metadata' : metadata
 		})
 	cur.close()
 	return response
+
 
 def get_album_urls(keys):
 	if not 'album' in keys:
