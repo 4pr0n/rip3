@@ -104,7 +104,7 @@ class RipManager(object):
 			select
 				album_id, urls.i_index, urls.url, urls.saveas, urls.type, urls.metadata, urls.added, albums.path
 			from urls inner join albums on urls.album_id = albums.rowid
-			order by added desc, i_index asc
+			order by added asc, i_index asc
 			limit 1
 		'''
 		cursor = self.db.conn.cursor()
