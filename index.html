@@ -176,12 +176,11 @@
 						</tr><tr>
 							<td class="album-key text-right" style="padding-right: 10px;">urls:</td>
 							<td class="album-value">
-								<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-source">urls (source)</button>
-								<button class="btn btn-primary btn-xs album-urls" id="album-info-urls-rarchives">urls (rarchives)</button>
+								<button class="btn btn-primary btn-sm album-urls" id="album-info-urls-source">urls (source)</button>
+								<button class="btn btn-primary btn-sm album-urls" id="album-info-urls-rarchives">urls (rarchives)</button>
 							</td>
 						</tr><tr>
-							<td></td>
-							<td id="album-info-urls" style="display: none">
+							<td colspan="2" id="album-info-urls" style="display: none">
 								<textarea class="input-sm" id="album-info-urls-text" rows="20" style="width: 100%"></textarea>
 							</td>
 						</tr><tr>
@@ -208,7 +207,8 @@
 							</td>
 						</tr>
 					</table>
-					
+
+					<!-- admin functions -->
 					<table class="table table-condensed" id="admin-info-table" style="display: none">
 						<tr>
 							<td class="text-left" colspan="2">
@@ -219,12 +219,18 @@
 							<td class="album-value text-left">
 								<span class="text-danger" id="admin-info-user">127.0.0.1</span>
 
-								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-warn-form').slideDown(200)" class="btn btn-xs btn-warning" id="admin-warn">warn</button>
-								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-ban-form').slideDown(200)" class="btn btn-xs btn-danger" id="admin-ban">ban</button>
+								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-warn-form').slideDown(200)" class="btn btn-xs btn-warning" id="admin-warn">
+									<span class="glyphicon glyphicon-warning-sign"></span>
+									warn
+								</button>
+								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-ban-form').slideDown(200)" class="btn btn-xs btn-danger" id="admin-ban">
+									<span class="glyphicon glyphicon-ban-circle"></span>
+									ban
+								</button>
 								<div class="input-group input-group-sm" id="admin-warn-form" style="display: none">
 									<span class="input-group-btn">
-										<button id="album-warn-button" class="btn btn-danger" type="button">
-											<span class="glyphicon glyphicon-flag"></span>
+										<button id="album-warn-button" class="btn btn-warning" type="button">
+											<span class="glyphicon glyphicon-warning-sign"></span>
 											<strong>warn user</strong>
 										</button>
 									</span>
@@ -237,7 +243,7 @@
 								<div class="input-group input-group-sm" id="admin-ban-form" style="display: none">
 									<span class="input-group-btn">
 										<button id="album-ban-button" class="btn btn-danger" type="button">
-											<span class="glyphicon glyphicon-flag"></span>
+											<span class="glyphicon glyphicon-ban-circle"></span>
 											<strong>ban user</strong>
 										</button>
 									</span>
@@ -253,7 +259,7 @@
 							<td class="album-value text-left text-danger" id="admin-info-banned-reason"></td>
 						</tr><tr id="admin-info-warned">
 							<td class="album-key text-right" style="padding-right: 10px;">warned:</td>
-							<td class="album-value text-left text-danger" id="admin-info-warned-reason"></td>
+							<td class="album-value text-left text-warning" id="admin-info-warned-reason"></td>
 						</tr><tr>
 							<td class="album-key text-right" style="padding-right: 10px;">number of rips:</td>
 							<td class="album-value text-left" id="admin-info-rip-count">0</td>
@@ -262,7 +268,7 @@
 							<td class="album-value text-left text-danger" id="admin-info-reports"></td>
 						</tr>
 					</table>
-					<!-- report -->
+					<!-- /admin functions -->
 
 					<div id="album-progress-container" style="display: none">
 						<h2>ripping progress</h2>
@@ -491,7 +497,10 @@
 				</div> <!-- /container -->
 			</div> <!-- /jumbotron -->
 			<div class="container">
-				TODO: don't do what donny don't does
+				<h1>source code on github</h1>
+				<p> the website's source code is available <b><u><a href="https://github.com/4pr0n/rip3" target="_BLANK_source">here on github</a></u></b>
+				<p> backend is written in <b><u><a href="http://python.org/" target="_BLANK_python">Python</a></u></b> (2.7.x)
+				<p> frontend is built on <b><u><a href="http://getbootstrap.com/" target="_BLANK_bootstrap">Bootstrap</a></u></b> (3.0), <b><u><a href="http://jquery.com/" target="_BLANK_Jquery">JQuery</a></u></b> (2.x) 
 			</div>
 		</div> <!-- /#page-about-code -->
 

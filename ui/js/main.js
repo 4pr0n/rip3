@@ -35,6 +35,20 @@ function pageChanged() {
 	else if ('album' in keys) {
 		loadAlbum(keys.album);
 	}
+	else if ('user' in keys) {
+		$('#filter-button')
+			.html('user: ' + keys.user + ' <span class="caret"></span>')
+			.attr('filtername', keys.user);
+		showPage('page-albums');
+		applyAlbumsFilter();
+	}
+	else if ('reports' in keys) {
+		$('#sort-button')
+			.html('reports <span class="caret"></span>')
+			.attr('filtername', 'reports');
+		showPage('page-albums');
+		applyAlbumsFilter();
+	}
 	else if ('video'   in keys) {
 		showPage('page-video');
 		startVideoRip(keys['video']);
@@ -130,6 +144,17 @@ function addAlbumPreview(path, album) {
 						$(this).stop().slideUp(200)
 					});
 			});
+	}
+	if (album.admin.reports > 0) {
+		$div.css('background-color', '#b77');
+		$('<span/>')
+			.html('<b>' + album.admin.reports + ' report' + (album.admin.reports == 1 ? '' : 's') + '</b>')
+			.css({
+				'position': 'absolute',
+				'left': $div.width() / 2,
+				'font-size' : '1.2em'
+			})
+			.appendTo( $div );
 	}
 	$div
 		.appendTo( $('#albums-container') );
@@ -317,7 +342,7 @@ function loadAlbum(album) {
 				$('#album-info-download').empty();
 				$('<button type="button"/>')
 					.addClass('btn btn-sm btn-primary')
-					.html('<b>zip</b> <span class="glyphicon glyphicon-compressed"></span>')
+					.html('<b><span class="glyphicon glyphicon-compressed"></span> zip</b>')
 					.click(function() {
 						$('#album-info-download')
 							.empty()
@@ -334,7 +359,7 @@ function loadAlbum(album) {
 									.click(function() {
 										window.location.href = $(this).data('zip');
 									})
-									.html('<b>zip <span class="glyphicon glyphicon-compressed"></span></b>')
+									.html('<b><span class="glyphicon glyphicon-compressed"></span> zip</b>')
 									.appendTo( $('#album-info-download').empty() );
 								window.location.href = json.zip;
 							});
@@ -348,7 +373,7 @@ function loadAlbum(album) {
 						.click(function() {
 							window.location.href = $(this).data('zip');
 						})
-						.html('<b>zip <span class="glyphicon glyphicon-compressed"></span></b>')
+						.html('<b><span class="glyphicon glyphicon-compressed"></span> zip</b>')
 						.appendTo( $('#album-info-download').empty() );
 			}
 			$('#album-info-size').html(json.count + ' images <small>(' + bytesToHR(json.filesize) + ')</small>');
@@ -376,7 +401,7 @@ function loadAlbum(album) {
 				} else {
 					$('#admin-info-warned').hide();
 				}
-					
+
 				$('#admin-info-rip-count').html('<u><b><a href="#user=' + json.admin.user.ip + '">' + json.admin.user.rip_count + '</a></u></b>');
 
 				if (json.admin.reports.length == 0) {
@@ -396,6 +421,64 @@ function loadAlbum(album) {
 							.appendTo( $('#admin-info-reports') );
 					}
 				}
+
+				var warn_params = {
+					'method'  : 'warn_user',
+					'user'    : json.admin.user.ip,
+					'message' : $('#album-warn-text').val(),
+					'url'     : json.url
+				};
+				$('#album-warn-button')
+					.data('warn_params', warn_params)
+					.click(function() {
+						var warn_params = $(this).data('warn_params');
+						warn_params.message = $('#album-warn-text').val();
+						$('#admin-warn-form').siblings('div').remove();
+						$.getJSON('api.cgi?' + $.param(warn_params))
+							.fail(function() { 
+								$('<div/>')
+									.addClass('text-danger')
+									.html('error: failed to warn user')
+									.insertAfter('#admin-warn-form')
+									.hide().slideDown(200);
+							})
+							.done(function(json) {
+								$('<div/>')
+									.addClass('text-' + json.color)
+									.html(json.message)
+									.insertAfter('#admin-warn-form')
+									.hide().slideDown(200);
+							});
+					});
+
+				var ban_params = {
+					'method'  : 'ban_user',
+					'user'    : json.admin.user.ip,
+					'message' : $('#album-ban-text').val(),
+					'url'     : json.url
+				};
+				$('#album-ban-button')
+					.data('ban_params', ban_params)
+					.click(function() {
+						var ban_params = $(this).data('ban_params');
+						ban_params.message = $('#album-ban-text').val();
+						$('#admin-ban-form').siblings('div').remove();
+						$.getJSON('api.cgi?' + $.param(ban_params))
+							.fail(function() { 
+								$('<div/>')
+									.addClass('text-danger')
+									.html('error: failed to ban user')
+									.insertAfter('#admin-ban-form')
+									.hide().slideDown(200);
+							})
+							.done(function(json) {
+								$('<div/>')
+									.addClass('text-' + json.color)
+									.html(json.message)
+									.insertAfter('#admin-ban-form')
+									.hide().slideDown(200);
+							});
+					});
 			}
 			// Album progress, decides if thumbnails should be loaded
 			checkAlbumProgress(album);
@@ -456,7 +539,7 @@ function setupGetURLs(id, host) {
 	}
 	$('#album-info-urls-' + id)
 		.removeAttr('disabled')
-		.html('urls (' + host + ')')
+		.html('<span class="glyphicon glyphicon-link"></span> urls (' + host + ')')
 		.data('source', host)
 		.data('id', id)
 		.unbind('click')
@@ -483,7 +566,7 @@ function setupGetURLs(id, host) {
 					.always(function() { 
 						$('#album-info-urls-' + id)
 							.empty()
-							.html('urls (' + host + ')');
+							.html('<span class="glyphicon glyphicon-link"></span> urls (' + host + ')')
 					})
 					.fail(function() {
 						$('#album-info-urls').stop().show();
@@ -1013,14 +1096,14 @@ function setupAlbumFilters() {
 
 function applyAlbumsFilter() {
 	var host = $('#filter-button').attr('filtername');
-	var author = host;
+	var author;
 	if (host === 'none') {
 		host   = undefined;
 		author = undefined;
 	}
-	else if (host === 'mine') {
+	else if (host === 'mine' || host.indexOf('.') >= 0 || host.indexOf(':') >= 0) {
 		host   = undefined;
-		author = 'mine';
+		author = host;
 	}
 	else {
 		author = undefined;

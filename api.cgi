@@ -26,6 +26,8 @@ def main():
 	elif method == 'rip_video':          return rip_video(keys)
 	elif method == 'get_admin':          return {'admin': get_admin() }
 	elif method == 'report_album':       return report_album(keys)
+	elif method == 'ban_user':           return ban_user(keys)
+	elif method == 'warn_user':          return warn_user(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -391,7 +393,7 @@ def get_albums(keys):
 	}
 
 	# Provide list of supported sites on first request only
-	if int(keys.get('start', '0')) == 0 and keys.get('host', None) == None and keys.get('author', None) == None and keys.get('sort', None) == None and keys.get('order', None) == None:
+	if int(keys.get('start', '0')) == 0:
 		from py.SiteBase import SiteBase
 		#           wow
 		#                        so 1line
@@ -471,8 +473,75 @@ def report_album(keys):
 	db.commit()
 	return err('album has been reported. the admins will look into this soon.')
 
+
+###################
+# ADMIN METHODS
+
+def ban_user(keys):
+	user    = keys.get('user',    None)
+	message = keys.get('message', None)
+	url     = keys.get('url',     None)
+	if user    == None: return err('user required for ban')
+	if message == None: return err('message required for ban')
+
+	from py.DB import DB
+	db = DB()
+	cursor = db.conn.cursor()
+	if db.count('users', 'ip = ?', [user]):
+		reason = db.select_one('banned_reason', 'users', 'ip = ?', [user])
+		if reason != None:
+			return {
+				'color'   : 'warning',
+				'user'    : user,
+				'message' : 'user is already banned, reason: "%s"' % reason
+			}
+		db.update('users', 'banned = 1, banned_reason = ?', 'ip = ?', [message, user])
+	else:
+		db.insert('users', (user, None, 0, 0, 1, message, url,) )
+	db.commit()
+	cursor.close()
+
+	return {
+		'color'   : 'success',
+		'user'    : user,
+		'message' : 'user was banned'
+	}
+
+def warn_user(keys):
+	user    = keys.get('user',    None)
+	message = keys.get('message', None)
+	url     = keys.get('url',     None)
+	if user    == None: return err('user required for warn')
+	if message == None: return err('message required for warn')
+
+	from py.DB import DB
+	from time import gmtime
+	from calendar import timegm
+	db = DB()
+	cursor = db.conn.cursor()
+	if db.count('users', 'ip = ?', [user]):
+		warn_message = db.select_one('warning_message', 'users', 'ip = ?', [user])
+		if warn_message != None:
+			return {
+				'color'   : 'warning',
+				'user'    : user,
+				'message' : 'user is already warned, message: "%s"' % warn_message
+			}
+		db.update('users', 'warnings = warnings + 1, warning_message = ?, warned = ?', 'ip = ?', [message, timegm(gmtime()), user])
+	else:
+		db.insert('users', (user, message, 1, timegm(gmtime()), 0, None, None,) )
+	db.commit()
+	cursor.close()
+
+	return {
+		'color'   : 'success',
+		'user'    : user,
+		'message' : 'user was warned'
+	}
+
 ###################
 # HELPER METHODS
+
 
 def err(error, tb=None):
 	response = {'error': error}
