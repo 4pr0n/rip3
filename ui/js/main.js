@@ -145,7 +145,7 @@ function addAlbumPreview(path, album) {
 					});
 			});
 	}
-	if (album.admin.reports > 0) {
+	if ('admin' in album && 'reports' in album.admin && album.admin.reports > 0) {
 		$div.css('background-color', '#b77');
 		$('<span/>')
 			.html('<b>' + album.admin.reports + ' report' + (album.admin.reports == 1 ? '' : 's') + '</b>')
