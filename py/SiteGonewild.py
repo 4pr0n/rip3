@@ -10,6 +10,7 @@ class SiteGonewild(SiteBase):
 
 	@staticmethod
 	def can_rip(url):
+		url = url.replace('http://', '')
 		return url.startswith('gonewild:') and \
 				url.count(':') == 1 and \
 				SiteGonewild.valid_username(url.split(':')[1])
@@ -27,6 +28,7 @@ class SiteGonewild(SiteBase):
 		return 'gonewild:thatnakedgirl'
 
 	def sanitize_url(self):
+		self.url = self.url.replace('http://', '')
 		self.url = self.url.lower()
 
 	def get_album_name(self):
@@ -42,6 +44,7 @@ class SiteGonewild(SiteBase):
 		from shutil import copy2, rmtree
 		from time import gmtime
 		from os import path, walk, environ, getcwd
+		from json import loads
 
 		savedir = path.join('rips', self.path)
 		if getcwd().endswith('py'):
@@ -62,13 +65,25 @@ class SiteGonewild(SiteBase):
 
 		user = self.url.split(':')[-1]
 
+		# Search for username (with proper case) on site
+		gwapi = self.db.get_config('gw_api')
+		if gwapi == None:
+			raise Exception('unable to rip gonewild albums: gw_api is null')
+		r = self.httpy.get('%s?method=search_user&user=%s' % (gwapi, user))
+		json = loads(r)
+		found = False
+		for jsonuser in json['users']:
+			if jsonuser.lower() == user.lower():
+				found = True
+				user = jsonuser
+				break
+
 		gwroot = self.db.get_config('gw_root')
 		if gwroot == None:
 			raise Exception('unable to rip gonewild albums: gw_root is null')
-
 		userroot = path.join(gwroot, user)
 		# Check if we can actually rip this user
-		if not path.exists(userroot):
+		if not found or not path.exists(userroot):
 			return {
 				'error' : 'unable to rip user (not archived)'
 			}
