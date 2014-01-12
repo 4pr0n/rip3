@@ -748,7 +748,6 @@ function startAlbumRip(baseurl) {
 	if (url.indexOf('http') != 0) {
 		url = 'http://' + url;
 	}
-	console.log(url);
 	$('#text-rip-album')
 		.val(url);
 	$('#text-rip-album,#button-rip-album')

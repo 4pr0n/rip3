@@ -372,12 +372,16 @@ def get_albums(keys):
 				'zip' : zipfile,
 				'preview' : []
 			}
+		if thumb == 'nothumb.png':
+			thumb = './ui/images/%s' % thumb
+		else:
+			thumb = '/'.join(['rips', path, 'thumbs', thumb])
 		d[path]['preview'].append({
 				'image' : '/'.join(['rips', path, image]),
 				'type' : mediatype,
 				'width' : w,
 				'height' : h,
-				'thumb' : '/'.join(['rips', path, 'thumbs', thumb]),
+				'thumb' : thumb,
 				't_width' : tw,
 				't_height' : th
 			})
