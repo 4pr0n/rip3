@@ -134,7 +134,7 @@ class SiteFlickr(SiteBase):
 
 		urlinfo = {
 			'url'   : image,
-			'index' : index
+			'index' : index + 1
 		}
 		if 'name="title" content="' in r:
 			metadata = self.httpy.between(r, 'name="title" content="', '">')[0]
