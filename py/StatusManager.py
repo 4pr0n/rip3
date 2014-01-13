@@ -20,7 +20,6 @@ VIDEO_FILE_TO_WRITE = '../status_video.html'
 class StatusManager(object):
 	def __init__(self):
 		self.db = DB()
-		pass
 
 	def update_albums(self):
 		# Get existing statuses
@@ -34,10 +33,6 @@ class StatusManager(object):
 		# Iterate over rippers, store new values for DB in 'insertmany'
 		insertmany = []
 		rippers = list(SiteBase.iter_rippers())
-		'''
-		if len(rippers) % 3 != 0:
-			rippers = rippers[0:-(len(rippers) % 3)]
-		'''
 		for (index, ripper) in enumerate(rippers):
 			host = ripper.get_host()
 			url = ripper.get_sample_url()
@@ -151,8 +146,21 @@ class StatusManager(object):
 		f.close()
 		move(temp_file, VIDEO_FILE_TO_WRITE)
 
+	@staticmethod
+	def exit_if_already_started():
+		from commands import getstatusoutput
+		from sys import exit
+		(status, output) = getstatusoutput('ps aux')
+		running_processes = 0
+		for line in output.split('\n'):
+			if 'python' in line and 'StatusManager.py' in line and not '/bin/sh -c' in line:
+				running_processes += 1
+		if running_processes > 1:
+			exit(0) # Quit silently if this script is already running
+
 
 if __name__ == '__main__':
+	StatusManager.exit_if_already_started()
 	sm = StatusManager()
-	#sm.update_albums()
+	sm.update_albums()
 	sm.update_videos()
