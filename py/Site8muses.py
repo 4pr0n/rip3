@@ -30,15 +30,15 @@ class Site8muses(SiteBase):
 		httpy = Httpy()
 
 		r = httpy.get(self.url)
-		chunks = httpy.between(r, '<article class="', '</article>')
-		if len(chunks) == 0:
-			raise Exception('unable to find "article class" at %s '% self.url)
-		r = chunks[0]
 		result = []
-		for link in httpy.between(r, '<a href="', '"'):
+		for link in httpy.between(r, 'data-cfsrc="', '"'):
 			if link.startswith('//'):
 				link = 'http:%s' % link
 			link = link.replace(' ', '%20')
+			if '-cu_' in link:
+				temp = link[:link.find('-cu_')]
+				temp = '%s-me.%s' % (temp, link.split('.')[-1])
+				link = temp
 			result.append(link)
 		return result
 
@@ -61,6 +61,8 @@ class Site8muses(SiteBase):
 		url = 'http://www.8muses.com/index/category/hotassneighbor7'
 		s = Site8muses(url)
 		urls = s.get_urls()
+		for (i, url) in enumerate(urls):
+			print i, url
 		expected = 21
 		if len(urls) != expected:
 			return 'expected %d images, got %d. url: %s' % (expected, len(urls), url)
