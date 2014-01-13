@@ -53,7 +53,7 @@ function pageChanged() {
 		showPage('page-video');
 		startVideoRip(keys['video']);
 	}
-	else if (window.location.hash.indexOf(':') >= 0) {
+	else if (window.location.hash.indexOf('.') >= 0 || window.location.hash.indexOf('gonewild:') >= 0) {
 		// Page to rip
 		showPage('page-rip');
 		startAlbumRip(window.location.hash.substring(1));
