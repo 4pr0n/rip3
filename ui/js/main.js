@@ -968,14 +968,17 @@ function startVideoRip(url) {
 
 			// Show video
 			$('#video-player-anchor').remove();
-			$('#video-player-container').remove('h3,p');
-			$('<a/>')
-				.attr('href', json.source)
-				.attr('target', '_BLANK_' + json.host)
-				.attr('rel', 'noreferrer')
-				.html(json.source)
-				.appendTo( $('#video-player-source').html('<b>source:</b> ') );
-			$('#video-player-source')
+			$('#video-player-container').empty();
+			$('<div/>')
+				.html('<b>source:</b> ')
+				.appendTo( $('#video-player-container') )
+				.append(
+						$('<a/>')
+							.attr('href', json.source)
+							.attr('target', '_BLANK_' + json.host)
+							.attr('rel', 'noreferrer')
+							.html(json.source)
+				);
 			if ('no_video' in json) {
 				$('<p/>')
 					.html('try the download link')
