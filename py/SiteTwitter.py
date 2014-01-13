@@ -295,6 +295,7 @@ class SiteTwitter(SiteBase):
 		# Check ripper gets all images in an album
 		url = SiteTwitter.get_sample_url()
 		s = SiteTwitter(url)
+		SiteTwitter.MAX_REQUESTS_PER_RIP = 1
 		urls = s.get_urls()
 		expected = 5
 		if len(urls) < expected:
