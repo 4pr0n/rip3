@@ -250,6 +250,19 @@ class RipManager(object):
 		self.results.append(result)
 		self.current_threads.pop()
 
+	@staticmethod
+	def exit_if_already_started():
+		from commands import getstatusoutput
+		from sys import exit
+		(status, output) = getstatusoutput('ps aux')
+		running_processes = 0
+		for line in output.split('\n'):
+			if 'python' in line and 'RipManager.py' in line and not '/bin/sh -c' in line:
+				running_processes += 1
+		if running_processes > 1:
+			exit(0) # Quit silently if this script is already running
+
 if __name__ == '__main__':
+	RipManager.exit_if_already_started()
 	rm = RipManager()
 	rm.start()
