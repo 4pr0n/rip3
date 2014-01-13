@@ -16,7 +16,7 @@ class VideoMotherless(VideoBase):
 
 	@staticmethod
 	def get_sample_url():
-		return 'http://motherless.com/FF6D765'
+		return 'http://motherless.com/BDA5740'
 
 	def rip_video(self):
 		r = self.httpy.get(self.url)
