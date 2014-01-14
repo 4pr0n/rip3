@@ -12,6 +12,7 @@ from DB import DB
 from calendar import timegm
 from time     import gmtime
 from shutil   import move
+from traceback import format_exc
 
 SECONDS_BETWEEN_CHECKS = 3600
 ALBUM_FILE_TO_WRITE = '../status.html'
@@ -69,6 +70,8 @@ class StatusManager(object):
 				except Exception, e:
 					available = -1
 					message = str(e)
+					print e
+					print format_exc()
 				insertmany.append( (host, available, message, checked) )
 			else:
 				available = oldavailable
