@@ -53,7 +53,7 @@ class SiteImagebam(SiteBase):
 				self.threads.append(None)
 				t = Thread(target=self.get_image_from_page, args=(link, index))
 				t.start()
-			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+			if len(self.result) + len(self.threads) > SiteBase.MAX_IMAGES_PER_RIP:
 				break
 			page += 1
 			if 'class="pagination_link">%d</a>' % page in r:
