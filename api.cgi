@@ -14,8 +14,7 @@ def main():
 	if not 'method' in keys:
 		raise Exception('unspecified method')
 	method = keys['method']
-	if   method == 'get_rips_by_user':   return get_rips_by_user(keys)
-	elif method == 'count_rips_by_user': return count_rips_by_user(keys)
+	if   method == 'count_rips_by_user': return count_rips_by_user(keys)
 	elif method == 'rip_album':          return rip_album(keys)
 	elif method == 'get_album_info':     return get_album_info(keys)
 	elif method == 'get_album_progress': return get_album_progress(keys)
@@ -29,12 +28,6 @@ def main():
 	elif method == 'ban_user':           return ban_user(keys)
 	elif method == 'warn_user':          return warn_user(keys)
 	else: return err('unsupported method: %s' % method)
-
-
-def get_rips_by_user(keys):
-	from py.Queries import Queries
-	user = keys.get('user', environ.get('REMOTE_ADDR', '0.0.0.0'))
-	return Queries.get_rips_by_user(user)
 
 
 def count_rips_by_user(keys):
