@@ -81,10 +81,12 @@ class SiteInstagram(SiteBase):
 		url = SiteInstagram.get_sample_url()
 		s = SiteInstagram(url)
 		urls = s.get_urls()
+		for i,u in enumerate(urls):
+			print i,u
 		expected = 10
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
 		return None
 
 if __name__ == '__main__':
-	SiteInstagram.test()
+	print SiteInstagram.test()
