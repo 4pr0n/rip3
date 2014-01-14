@@ -53,6 +53,8 @@ class SiteImagebam(SiteBase):
 				self.threads.append(None)
 				t = Thread(target=self.get_image_from_page, args=(link, index))
 				t.start()
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 			page += 1
 			if 'class="pagination_link">%d</a>' % page in r:
 				r = self.httpy.get('%s%d' % (self.url, page))
@@ -89,7 +91,7 @@ class SiteImagebam(SiteBase):
 		for (i, u) in enumerate(urls):
 			print i,u
 
-		expected = 10
+		expected = 3
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
 

@@ -60,7 +60,7 @@ class SiteChickupload(SiteBase):
 		for (i, u) in enumerate(urls):
 			print i,u
 
-		expected = 10
+		expected = 7
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
 

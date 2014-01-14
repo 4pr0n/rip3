@@ -44,7 +44,6 @@ class SiteInstagram(SiteBase):
 		max_id  = ''
 		result  = []
 		while True:
-			print 'loading %s%s' % (baseurl, params)
 			r = self.httpy.get('%s%s' % (baseurl, params))
 			json = loads(r)
 			datas = json.get('data', [])
