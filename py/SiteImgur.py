@@ -114,6 +114,8 @@ class SiteImgur(SiteBase):
 				'url' : url,
 				'metadata' : '%s%s' % (title, caption)
 			})
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 		return result
 
 	@staticmethod
@@ -134,6 +136,8 @@ class SiteImgur(SiteBase):
 				# Add it anyway so RipManager will mark the image as 'errored'
 				pass
 			result.append(link)
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 		return result
 
 	def get_urls_subreddit(self):
@@ -154,6 +158,8 @@ class SiteImgur(SiteBase):
 					return result
 				link = self.get_highest_res(link)
 				result.append(link)
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 			page += 1
 
 	def get_urls_user_albums(self):
@@ -178,6 +184,8 @@ class SiteImgur(SiteBase):
 				# Tack this album's index/albumid to image
 				result.append('%03d_%s_%s' % (index + 1, albumid, image))
 			sleep(2)
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 		return result
 
 	def get_urls_user_images(self):
@@ -198,7 +206,10 @@ class SiteImgur(SiteBase):
 			# TODO report progress
 			for image in data['images']:
 				result.append('http://i.imgur.com/%s%s' % (image['hash'], image['ext']))
-			if index >= total or self.hit_image_limit(): break
+			if index >= total:
+				break
+			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+				break
 			sleep(1)
 		return result
 
@@ -215,7 +226,7 @@ class SiteImgur(SiteBase):
 		if not 'h.' in url:
 			return url
 		temp = url.replace('h.', '.')
-		m = self.web.get_meta(temp)
+		m = self.httpy.get_meta(temp)
 		if 'Content-Length' in m and m['Content-Length'] == '503':
 			raise Exception(temp)
 		if 'Content-Type' in m and 'image' in m['Content-Type'].lower():
