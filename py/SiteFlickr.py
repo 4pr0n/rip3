@@ -149,18 +149,15 @@ class SiteFlickr(SiteBase):
 		fields = album.split('_')
 		if len(fields) < 2 or fields[0] != SiteFlickr.get_host():
 			return None
-		# Return url of album (if possible)
+		elif len(fields) == 2:
+			return 'http://www.flickr.com/photos/%s' % fields[1]
+		else:
+			return 'http://www.flickr.com/photos/%s/sets/%s' % (fields[1], fields[2])
 
 	@staticmethod
 	def test():
 		from Httpy import Httpy
 		httpy = Httpy()
-
-		# Check we can hit the host
-		url = 'http://hostname.com'
-		r = httpy.get(url)
-		if len(r.strip()) == 0:
-			raise Exception('unable to retrieve data from %s' % url)
 
 		# Check ripper gets all images in an album
 		url = SiteFlickr.get_sample_url()
