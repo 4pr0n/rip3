@@ -39,6 +39,9 @@ class SiteImgur(SiteBase):
 		url = 'http://%s' % url.replace('http://', '').replace('https://', '')
 		url = url.replace('/m.imgur.com/', '/imgur.com/')
 		url = url.replace('/www.imgur.com/', '/imgur.com/')
+		url = url.split('#')[0]
+		url = url.split('?')[0]
+		url = url.split('&')[0]
 		if not url.endswith('/'):
 			url += '/'
 		if 'imgur.com/a/' in url:
