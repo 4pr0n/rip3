@@ -7,11 +7,9 @@
 
 from SiteBase import SiteBase
 from VideoBase import VideoBase
-from DB import DB
 
-from calendar import timegm
-from time     import gmtime
-from shutil   import move
+from time      import strftime, gmtime
+from shutil    import move
 from traceback import format_exc
 
 SECONDS_BETWEEN_CHECKS = 3600
@@ -19,74 +17,43 @@ ALBUM_FILE_TO_WRITE = '../status.html'
 VIDEO_FILE_TO_WRITE = '../status_video.html'
 
 class StatusManager(object):
-	def __init__(self):
-		self.db = DB()
-
 	def update_albums(self):
 		# Get existing statuses
-		now = timegm(gmtime())
-		cursor = self.db.conn.cursor()
-		curexec = cursor.execute('select host, checked, available, message from sites')
-		stored = curexec.fetchall()
-		cursor.close()
 
 		html_output = ''
-		# Iterate over rippers, store new values for DB in 'insertmany'
-		insertmany = []
+		# Iterate over rippers
 		rippers = list(SiteBase.iter_rippers())
 		for (index, ripper) in enumerate(rippers):
 			host = ripper.get_host()
 			url = ripper.get_sample_url()
 
-			need_to_test = True
-			# Find previous status / info
-			oldhost = oldchecked = oldavailable = oldmessage = None
-			for (oldhost, oldchecked, oldavailable, oldmessage) in stored:
-				if oldhost == host:
-					if now - oldchecked > SECONDS_BETWEEN_CHECKS:
-						need_to_test = False
-						break
+			try:
+				print 'testing %s ripper...' % host
+				result = ripper.test()
+				'''
+				# For testing the UI
+				if index % 3 == 0:
+					result = None
+				elif index % 3 == 1:
+					result = 'this site does not work right'
+				else:
+					raise Exception('this ripper REALLY does not work right')
+				'''
+				# test():
+				# 1. Throws exception if something really bad happens (can't access site)
+				# 2. Returns error message (str) if album output isn't as expected
+				# 3. Returns None if it works as expected
+				available = int(result == None)
+				message = result
+			except Exception, e:
+				available = -1
+				message = str(e)
+				print e
+				print format_exc()
+			print host, url, available, message
+			html_output += self.host_html(host, url, available, message)
 
-			if need_to_test:
-				checked = now
-				try:
-					print 'testing %s ripper...' % host
-					result = ripper.test()
-					'''
-					# For testing the UI
-					if index % 3 == 0:
-						result = None
-					elif index % 3 == 1:
-						result = 'this site does not work right'
-					else:
-						raise Exception('this ripper REALLY does not work right')
-					'''
-					# test():
-					# 1. Throws exception if something really bad happens (can't access site)
-					# 2. Returns error message (str) if album output isn't as expected
-					# 3. Returns None if it works as expected
-					available = int(result == None)
-					message = result
-				except Exception, e:
-					available = -1
-					message = str(e)
-					print e
-					print format_exc()
-				insertmany.append( (host, available, message, checked) )
-			else:
-				available = oldavailable
-				message = oldmessage
-				checked = oldchecked
-			print host, url, available, message, checked
-			html_output += self.host_html(host, url, available, message, checked)
-
-		# Store any changes in the DB
-		if len(insertmany) > 0:
-			cursor = self.db.conn.cursor()
-			curexec = cursor.executemany('insert or replace into sites values (?, ?, ?, ?)', insertmany)
-			self.db.commit()
-			cursor.close()
-
+		html_output += self.last_updated()
 		# Write changes to HTML file
 		temp_file = '%s.tmp' % ALBUM_FILE_TO_WRITE
 		f = open(temp_file, 'w')
@@ -95,7 +62,7 @@ class StatusManager(object):
 		f.close()
 		move(temp_file, ALBUM_FILE_TO_WRITE)
 	
-	def host_html(self, host, url, available, message, checked):
+	def host_html(self, host, url, available, message):
 		if available == 1:
 			color = 'success'
 		elif available == 0:
@@ -124,6 +91,14 @@ class StatusManager(object):
 		html += '</div>\n'
 		return html
 
+	def last_updated(self):
+		return '''
+			<div class="row">
+				<div class="col-xs-12 text-center">
+					<small>last updated: %s</small>
+				</div>
+			</div>
+		''' % strftime('%Y-%m-%d %H:%M:%S GMT', gmtime())
 
 	def update_videos(self):
 		html = ''
@@ -140,8 +115,9 @@ class StatusManager(object):
 				message = str(e)
 			url = ripper.get_sample_url().replace('&', '||AMP||')
 			url = 'video=%s' % url
-			html += self.host_html(ripper.get_host(), url, available, message, None)
+			html += self.host_html(ripper.get_host(), url, available, message)
 
+		html += self.last_updated()
 		temp_file = '%s.tmp' % VIDEO_FILE_TO_WRITE
 		f = open(temp_file, 'w')
 		f.write(html)
