@@ -271,7 +271,7 @@ function loadAlbum(album) {
 		})
 		.empty();
 	// Album info
-	$('#album-info-table,#admin-info-table,#album-status,#album-info-rerip,#album-info-name').slideUp(200);
+	$('#album-info-table,#admin-info-table,#album-status,#album-info-rerip,#album-info-name').hide();
 	$.getJSON('api.cgi?method=get_album_info&album=' + encodeURIComponent(album))
 		.fail(function() { /* TODO */ })
 		.done(function(json) {
@@ -389,20 +389,145 @@ function loadAlbum(album) {
 			if ('admin' in json) {
 				$('#admin-info-table').slideDown(200);
 				$('#admin-info-user').html(json.admin.user.ip);
-				if (json.admin.user.banned) {
+				if ('banned' in json.admin.user && json.admin.user.banned) {
 					$('#admin-info-banned').show();
-					$('#admin-info-banned-reason').html('reason: "' + json.admin.user.banned_reason + '"');
+					$('#admin-info-banned-reason').html('reason: "' + json.admin.user.banned_reason + '" ');
+					$('<button class="btn btn-xs btn-success"/>')
+						.attr('id', 'album-unban-user')
+						.html('unban')
+						.click(function() {
+							$.getJSON('api.cgi?method=ban_user&user=' + json.admin.user.ip + '&unban=True')
+								.fail(function() {
+									$('#album-unban-user').html('failed to unban user');
+								})
+								.done(function(resp) {
+									$('#album-unban-user')
+										.attr('disabled', 'disabled')
+										.html('user was unbanned');
+								});
+						})
+						.appendTo( $('#admin-info-banned-reason') );
 				} else {
 					$('#admin-info-banned').hide();
 				}
 				if (json.admin.user.warnings > 0) {
 					$('#admin-info-warned').show();
-					$('#admin-info-warned-reason').html(json.admin.user.warnings + ' warnings, msg: "' + json.admin.user.warning_message + '"');
+					$('#admin-info-warned-reason').html(json.admin.user.warnings + ' warnings, msg: "' + json.admin.user.warning_message + '" ');
+					$('<button class="btn btn-xs btn-success"/>')
+						.attr('id', 'album-unwarn-user')
+						.html('clear')
+						.click(function() {
+							$.getJSON('api.cgi?method=warn_user&user=' + json.admin.user.ip + '&unwarn=True')
+								.fail(function() {
+									$('#album-unwarn-user').html('failed to remove warnings');
+								})
+								.done(function(resp) {
+									$('#album-unwarn-user')
+										.attr('disabled', 'disabled')
+										.html('warnings were removed');
+								});
+						})
+						.appendTo( $('#admin-info-warned-reason') );
 				} else {
 					$('#admin-info-warned').hide();
 				}
 
+				$('#admin-album-delete')
+					.removeAttr('disabled')
+					.click(function() {
+						var p = {
+							'method' : 'delete_album',
+							'host'   : json.host,
+							'album'  : json.album_name,
+							'blacklist' : false
+						};
+						$(this).attr('disabled', 'disabled');
+						$.getJSON('api.cgi?' + $.param(p))
+							.fail(function() {
+								$('#admin-album-delete')
+									.removeClass()
+									.addClass('btn btn-xs btn-danger')
+									.html('failed to delete album');
+							})
+							.done(function(resp) {
+								$('<div/>')
+									.addClass('text-' + resp.color)
+									.html(resp.message)
+									.appendTo( $('#admin-album-area') );
+							});
+					});
+				$('#admin-album-blacklist')
+					.removeAttr('disabled')
+					.click(function() {
+						var p = {
+							'method' : 'delete_album',
+							'host'   : json.host,
+							'album'  : json.album_name,
+							'blacklist' : true
+						};
+						$(this).attr('disabled', 'disabled');
+						$.getJSON('api.cgi?' + $.param(p))
+							.fail(function() {
+								$('#admin-album-blacklist')
+									.removeClass()
+									.addClass('btn btn-xs btn-danger')
+									.html('failed to blacklist album');
+							})
+							.done(function(resp) {
+								$('<div/>')
+									.addClass('text-' + resp.color)
+									.html(resp.message)
+									.appendTo( $('#admin-album-area') );
+							});
+					});
+
 				$('#admin-info-rip-count').html('<u><b><a href="#user=' + json.admin.user.ip + '">' + json.admin.user.rip_count + '</a></u></b>');
+				$('#admin-user-delete-all')
+					.removeAttr('disabled')
+					.click(function() {
+						var p = {
+							'method' : 'delete_user',
+							'user'   : json.admin.user.ip,
+							'blacklist' : false
+						};
+						$(this).attr('disabled', 'disabled');
+						$.getJSON('api.cgi?' + $.param(p))
+							.fail(function() {
+								$('#admin-user-delete-all')
+									.removeClass()
+									.addClass('btn btn-xs btn-danger')
+									.html('failed to delete all albums');
+							})
+							.done(function(resp) {
+								$('<div/>')
+									.css('text-align', 'right')
+									.html(resp.message)
+									.appendTo( $('#admin-user-area') );
+							});
+					});
+				$('#admin-user-blacklist-all')
+					.removeAttr('disabled')
+					.click(function() {
+						var p = {
+							'method' : 'delete_user',
+							'user'   : json.admin.user.ip,
+							'blacklist' : true
+						};
+						$(this).attr('disabled', 'disabled');
+						$.getJSON('api.cgi?' + $.param(p))
+							.fail(function() {
+								$('#admin-user-blacklist-all')
+									.removeClass()
+									.addClass('btn btn-xs btn-danger')
+									.html('failed to blacklist all albums');
+							})
+							.done(function(resp) {
+								$('<div/>')
+									.css('text-align', 'right')
+									.html(resp.message)
+									.appendTo( $('#admin-user-area') );
+							});
+					});
 
 				if (json.admin.reports.length == 0) {
 					$('#admin-info-reports')
@@ -511,7 +636,7 @@ function checkAlbumProgress(album) {
 				return;
 			}
 			// Album is still in progress, hide fields and show status
-			$('#admin-info-table').slideUp(200);
+			$('#admin-info-table').hide();
 			$('#album-progress-container')
 				.slideDown(200)
 				.data('album', album);

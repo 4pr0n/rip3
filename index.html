@@ -215,9 +215,21 @@
 								<b>admin functions</b>
 							</td>
 						</tr><tr>
+							<td class="album-key text-right" style="padding-right: 10px;">album:</td>
+							<td class="album-value text-left" id="admin-album-area">
+								<button type="button" class="btn btn-xs btn-danger" id="admin-album-delete">
+									<span class="glyphicon glyphicon-trash"></span>
+									delete
+								</button>
+								<button type="button" class="btn btn-xs btn-danger" id="admin-album-blacklist">
+									<span class="glyphicon glyphicon-exclamation-sign"></span>
+									blacklist &amp; delete
+								</button>
+
+						</tr><tr>
 							<td class="album-key text-right" style="padding-right: 10px;">user:</td>
 							<td class="album-value text-left">
-								<span class="text-danger" id="admin-info-user">127.0.0.1</span>
+								<span id="admin-info-user">127.0.0.1</span>
 
 								<button type="button" onclick="$('#admin-warn,#admin-ban').hide(); $('#admin-warn-form').slideDown(200)" class="btn btn-xs btn-warning" id="admin-warn">
 									<span class="glyphicon glyphicon-warning-sign"></span>
@@ -262,7 +274,17 @@
 							<td class="album-value text-left text-warning" id="admin-info-warned-reason"></td>
 						</tr><tr>
 							<td class="album-key text-right" style="padding-right: 10px;">number of rips:</td>
-							<td class="album-value text-left" id="admin-info-rip-count">0</td>
+							<td class="album-value text-left" id="admin-user-area">
+								<span id="admin-info-rip-count">0</span>
+								<button type="button" class="btn btn-xs btn-danger" id="admin-user-delete-all">
+									<span class="glyphicon glyphicon-trash"></span>
+									delete all
+								</button>
+								<button type="button" class="btn btn-xs btn-danger" id="admin-user-blacklist-all">
+									<span class="glyphicon glyphicon-exclamation-sign"></span>
+									blacklist &amp; delete all
+								</button>
+							</td>
 						</tr><tr>
 							<td class="album-key text-right" style="padding-right: 10px;">reports:</td>
 							<td class="album-value text-left text-danger" id="admin-info-reports"></td>

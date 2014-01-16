@@ -27,6 +27,8 @@ def main():
 	elif method == 'report_album':       return report_album(keys)
 	elif method == 'ban_user':           return ban_user(keys)
 	elif method == 'warn_user':          return warn_user(keys)
+	elif method == 'delete_album':       return delete_album(keys)
+	elif method == 'delete_user':        return delete_user(keys)
 	else: return err('unsupported method: %s' % method)
 
 
@@ -475,14 +477,27 @@ def report_album(keys):
 # ADMIN METHODS
 
 def ban_user(keys):
+	if get_admin() == None:
+		return err('you are not an admin')
 	user    = keys.get('user',    None)
 	message = keys.get('message', None)
 	url     = keys.get('url',     None)
 	if user    == None: return err('user required for ban')
-	if message == None: return err('message required for ban')
 
 	from py.DB import DB
 	db = DB()
+
+	if keys.get('unban', False):
+		db.update('users', 'banned = 0, banned_reason = NULL', 'ip = ?', [user])
+		db.commit()
+		return {
+			'color'   : 'success',
+			'user'    : user,
+			'message' : 'user was unbanned'
+		}
+
+	if message == None: return err('message required for ban')
+
 	cursor = db.conn.cursor()
 	if db.count('users', 'ip = ?', [user]):
 		reason = db.select_one('banned_reason', 'users', 'ip = ?', [user])
@@ -509,12 +524,23 @@ def warn_user(keys):
 	message = keys.get('message', None)
 	url     = keys.get('url',     None)
 	if user    == None: return err('user required for warn')
-	if message == None: return err('message required for warn')
 
 	from py.DB import DB
+	db = DB()
+
+	if keys.get('unwarn', False):
+		db.update('users', 'warnings = 0, warning_message = NULL, warned = 0', 'ip = ?', [user])
+		db.commit()
+		return {
+			'color'   : 'success',
+			'user'    : user,
+			'message' : 'warnings were cleared'
+		}
+
+	if message == None: return err('message required for warn')
+
 	from time import gmtime
 	from calendar import timegm
-	db = DB()
 	cursor = db.conn.cursor()
 	if db.count('users', 'ip = ?', [user]):
 		warn_message = db.select_one('warning_message', 'users', 'ip = ?', [user])
@@ -535,6 +561,56 @@ def warn_user(keys):
 		'user'    : user,
 		'message' : 'user was warned'
 	}
+
+
+def delete_album(keys):
+	if not 'host' in keys:
+		return err('host is required')
+	if not 'album' in keys:
+		return err('album is required')
+	blacklist = keys.get('blacklist', 'false')
+	blacklist = (blacklist == 'true')
+
+	admin = get_admin()
+	if admin == None:
+		return err('you are not an admin')
+
+	from py.Common import delete_album as common_delete_album
+	try:
+		response = common_delete_album(keys['host'], keys['album'], blacklist, keys.get('reason', None), admin)
+		return {
+			'color'   : 'success',
+			'message' : response
+		}
+	except Exception, e:
+		return {
+			'color' : 'danger',
+			'message' : err(str(e))
+		}
+
+
+def delete_user(keys):
+	if not 'user' in keys:
+		return err('user is required')
+	blacklist = keys.get('blacklist', 'false')
+	blacklist = (blacklist == 'true')
+
+	admin = get_admin()
+	if admin == None:
+		return err('you are not an admin')
+
+	from py.Common import delete_user as common_delete_user
+	try:
+		response = common_delete_user(keys['user'], blacklist, keys.get('reason', None), admin)
+		return {
+			'color'   : 'success',
+			'message' : response.replace('\n', '<br>')
+		}
+	except Exception, e:
+		return {
+			'color' : 'danger',
+			'message' : err(str(e))
+		}
 
 ###################
 # HELPER METHODS
