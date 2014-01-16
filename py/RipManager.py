@@ -165,7 +165,15 @@ class RipManager(object):
 			print 'THREAD: %s: removing existing file %s' % (url['path'], saveas)
 			remove(saveas)
 
-		meta = self.httpy.get_meta(url['url'])
+		try:
+			meta = self.httpy.get_meta(url['url'])
+		except Exception, e:
+			# Can't get meta? Can't get image!
+			print 'THREAD: %s: failed to get_meta from %s: %s\n%s' % (url['path'], url['url'], str(e), format_exc())
+			result['error'] = 'failed to get metadata from %s: %s\n%s' % (url['url'], str(e), format_exc())
+			self.results.append(result)
+			self.current_threads.pop()
+			return
 
 		if 'imgur.com' in url['url'] and 'Content-length' in meta and meta['Content-length'] == '503':
 			print 'THREAD: %s: imgur image was not found (503b) at %s' % (url['path'], url['url'])

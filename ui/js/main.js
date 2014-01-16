@@ -978,7 +978,7 @@ function getQueryHashKeys() {
 		var key = keyvalue[0];
 		keyvalue.shift(); // Remove first element (key)
 		var value = keyvalue.join('='); // Remaining elements are the value
-		b[key] = decodeURIComponent(value.replace(/\+/g, " "));
+		b[key] = decodeURIComponent(value); //.replace(/\+/g, " "));
 	}
 	return b;
 }
