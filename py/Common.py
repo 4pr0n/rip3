@@ -14,15 +14,15 @@ def delete_album(host, album, blacklist, reason, admin):
 		response += 'album %s (%d views) was ' % (path, views)
 		if blacklist:
 			try:
-				#db.insert('blacklist', (host, name, reason, admin))
+				db.insert('blacklist', (host, name, reason, admin))
 				response += 'blacklisted and '
 			except Exception, e:
 				response += 'not blacklisted (%s) and ' % str(e)
 		try:
-			#db.delete('medias', 'album_id = ?', [rowid])
-			#db.delete('urls',   'album_id = ?', [rowid])
-			#db.delete('albums', 'rowid = ?',    [rowid])
-			#rmtree(path.join('rips', path))
+			db.delete('medias', 'album_id = ?', [rowid])
+			db.delete('urls',   'album_id = ?', [rowid])
+			db.delete('albums', 'rowid = ?',    [rowid])
+			rmtree(path.join('rips', path))
 			response += 'deleted '
 		except Exception, e:
 			response += 'not deleted (%s) ' % str(e)
@@ -47,15 +47,15 @@ def delete_user(user, blacklist, reason, admin):
 		response += 'album %s (%d views) was ' % (path, views)
 		if blacklist:
 			try:
-				#db.insert('blacklist', (host, name, reason, admin))
+				db.insert('blacklist', (host, name, reason, admin))
 				response += 'blacklisted and '
 			except Exception, e:
 				response += 'not blacklisted (%s) and ' % str(e)
 		try:
-			#db.delete('medias', 'album_id = ?', [rowid])
-			#db.delete('urls',   'album_id = ?', [rowid])
-			#db.delete('albums', 'rowid = ?',    [rowid])
-			#rmtree(path.join('rips', path))
+			db.delete('medias', 'album_id = ?', [rowid])
+			db.delete('urls',   'album_id = ?', [rowid])
+			db.delete('albums', 'rowid = ?',    [rowid])
+			rmtree(path.join('rips', path))
 			response += 'deleted '
 		except Exception, e:
 			response += 'not deleted (%s) ' % str(e)
