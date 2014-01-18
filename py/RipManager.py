@@ -20,16 +20,28 @@ class RipManager(object):
 		self.httpy = Httpy()
 		self.current_threads = []
 		self.results = []
+		self.to_remove = []
 
 	def start(self):
+		stale_count = self.db.count('urls', 'pending != 0')
+		if stale_count > 0:
+			print 'MAIN: found %d stale (interrupted) URLs, marking as non-pending...' % stale_count
+			self.db.update('urls', 'pending = 0')
+			self.db.commit()
 		print 'MAIN: starting infinite loop...'
 		already_printed_sleep_msg = False
 		while True:
 			sleep(0.1)
-			if len(self.results) > 0:
+			while len(self.results) > 0:
 				# self.results is the list of downloaded medias to be added to the DB
 				result = self.results.pop()
 				self.handle_result(result)
+
+			# Remove recently-completed rips
+			while len(self.to_remove) > 0:
+				(albumid, iindex) = self.to_remove.pop()
+				self.db.delete('urls', 'album_id = ? and i_index = ?', [ albumid, iindex ] )
+			self.db.commit()
 
 			try:
 				# Get next URL to retrieve
@@ -81,6 +93,8 @@ class RipManager(object):
 			result['metadata']
 		)
 		self.db.insert('medias', values)
+		# Delete from URLs
+		self.db.delete('urls', 'album_id = ? and i_index = ?', [ result['album_id'], result['i_index'] ] )
 		self.db.commit()
 
 		# Check if this was the last media to add to DB
@@ -98,12 +112,13 @@ class RipManager(object):
 
 	def get_next_url(self):
 		# Return next URL to retrieve, removes from DB
-		if self.db.count('urls') == 0:
+		if self.db.count('urls', 'pending = 0') == 0:
 			raise Exception('no URLs found')
 		q = '''
 			select
 				album_id, urls.i_index, urls.url, urls.saveas, urls.type, urls.metadata, urls.added, albums.path
 			from urls inner join albums on urls.album_id = albums.rowid
+			where urls.pending = 0
 			order by added asc, i_index asc
 			limit 1
 		'''
@@ -122,14 +137,13 @@ class RipManager(object):
 				'added'    : added,
 			}
 			break # We only wanted the first URL (limit is 1 anyway)
+		cursor.close()
 		if url == {}:
 			raise Exception('no URLs found on join')
 
-		# Delete from DB
-		q = 'delete from urls where album_id = ? and i_index = ?'
-		cursor.execute( q, [ url['album_id'], url['i_index'] ] )
+		# Mark URL as 'pending'
+		self.db.update('urls', 'pending = 1', 'album_id = ? and i_index = ?', [ url['album_id'], url['i_index'] ] )
 		self.db.commit()
-		cursor.close()
 		return url
 
 	def retrieve_result_from_url(self, url):
@@ -171,6 +185,7 @@ class RipManager(object):
 			# Can't get meta? Can't get image!
 			print 'THREAD: %s: failed to get_meta from %s: %s\n%s' % (url['path'], url['url'], str(e), format_exc())
 			result['error'] = 'failed to get metadata from %s: %s\n%s' % (url['url'], str(e), format_exc())
+			self.to_remove.append( (url['album_id'], url['i_index'] ) )
 			self.results.append(result)
 			self.current_threads.pop()
 			return
@@ -178,6 +193,7 @@ class RipManager(object):
 		if 'imgur.com' in url['url'] and 'Content-length' in meta and meta['Content-length'] == '503':
 			print 'THREAD: %s: imgur image was not found (503b) at %s' % (url['path'], url['url'])
 			result['error'] = 'imgur image was not found (503b) at %s' % url['url']
+			self.to_remove.append( (url['album_id'], url['i_index'] ) )
 			self.results.append(result)
 			self.current_threads.pop()
 			return
@@ -185,6 +201,7 @@ class RipManager(object):
 		if 'Content-type' in meta and 'html' in meta['Content-Type'].lower():
 			print 'THREAD: %s: url returned HTML content-type at %s' % (url['path'], url['url'])
 			result['error'] = 'url returned HTML content-type at %s' % url['url']
+			self.to_remove.append( (url['album_id'], url['i_index'] ) )
 			self.results.append(result)
 			self.current_threads.pop()
 			return
@@ -227,6 +244,7 @@ class RipManager(object):
 		except Exception, e:
 			print 'THREAD: %s: failed to download %s to %s: %s\n%s' % (url['path'], url['url'], saveas, str(e), str(format_exc()))
 			result['error'] = 'failed to download %s to %s: %s\n%s' % (url['url'], saveas, str(e), str(format_exc()))
+			self.to_remove.append( (url['album_id'], url['i_index'] ) )
 			self.results.append(result)
 			self.current_threads.pop()
 			return
@@ -239,6 +257,7 @@ class RipManager(object):
 			# This fails if we can't identify the image file. Consider it errored
 			print 'THREAD: %s: failed to identify image file %s from %s: %s\n%s' % (url['path'], saveas, url['url'], str(e), format_exc())
 			result['error'] = 'failed to identify image file %s from %s: %s\n%s' % (saveas, url['url'], str(e), format_exc())
+			self.to_remove.append( (url['album_id'], url['i_index'] ) )
 			self.results.append(result)
 			self.current_threads.pop()
 			return
@@ -255,6 +274,7 @@ class RipManager(object):
 		result['thumb_name'] = path.basename(tsaveas)
 
 		result['valid'] = 1
+		# Delete from URLs list
 		self.results.append(result)
 		self.current_threads.pop()
 

@@ -169,7 +169,8 @@ class SiteBase(object):
 					url_dict['saveas'],
 					url_dict['type'],
 					url_dict['metadata'],
-					now
+					now,   # Added date
+					0      # Pending
 				))
 		q = '''
 			insert into urls
@@ -316,12 +317,8 @@ class SiteBase(object):
 
 	@staticmethod
 	def fs_safe(txt):
-		safe = 'abcdefghijklmnopqrstuvwxyz0123456789'
-		result = ''
-		for c in txt:
-			if c.lower() in safe:
-				result += c
-		return result
+		safe = '-_.() abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+		return ''.join(c for c in txt if c in safe)
 
 if __name__ == '__main__':
 	'''

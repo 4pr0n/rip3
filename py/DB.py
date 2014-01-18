@@ -68,6 +68,7 @@ SCHEMA = {
 		'type      text,' +     # Media type
 		'metadata  text,' +     # Info about image
 		'added     integer,' +  # Date added to DB
+		'pending   integer,' +  # Current state of url
 		'primary key(album_id, i_index)',
 
 	'sites' :
@@ -334,7 +335,7 @@ class DB:
 		cur.execute(query, values)
 		cur.close()
 	
-	def update(self, table, changes, where, values=[]):
+	def update(self, table, changes, where='', values=[]):
 		'''
 			Updates row(s) in database.
 
@@ -345,10 +346,12 @@ class DB:
 				values: Values to insert into where condition
 		'''
 		cur = self.conn.cursor()
+		if where != '':
+			where = 'where %s' % where
 		query = '''
 			update %s
 				set %s
-				where %s
+				%s
 		''' % (table, changes, where)
 		cur.execute(query, values)
 		cur.close()
