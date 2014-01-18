@@ -2,7 +2,7 @@
 
 def delete_album(host, album, blacklist, reason, admin):
 	from shutil import rmtree
-	from os import path
+	from os import ospath
 	from DB import DB
 
 	db = DB()
@@ -22,7 +22,7 @@ def delete_album(host, album, blacklist, reason, admin):
 			db.delete('medias', 'album_id = ?', [rowid])
 			db.delete('urls',   'album_id = ?', [rowid])
 			db.delete('albums', 'rowid = ?',    [rowid])
-			rmtree(path.join('rips', path))
+			rmtree(ospath.join('rips', path))
 			response += 'deleted '
 		except Exception, e:
 			response += 'not deleted (%s) ' % str(e)
@@ -34,7 +34,7 @@ def delete_album(host, album, blacklist, reason, admin):
 
 def delete_user(user, blacklist, reason, admin):
 	from shutil import rmtree
-	from os import path
+	from os import ospath
 	from DB import DB
 
 	db = DB()
@@ -55,7 +55,7 @@ def delete_user(user, blacklist, reason, admin):
 			db.delete('medias', 'album_id = ?', [rowid])
 			db.delete('urls',   'album_id = ?', [rowid])
 			db.delete('albums', 'rowid = ?',    [rowid])
-			rmtree(path.join('rips', path))
+			rmtree(ospath.join('rips', path))
 			response += 'deleted '
 		except Exception, e:
 			response += 'not deleted (%s) ' % str(e)
