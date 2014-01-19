@@ -125,7 +125,7 @@ class SiteTumblr(SiteBase):
 		if len(fields) == 2:
 			return 'http://%s.tumblr.com/archive' % fields[1]
 		if len(fields) == 4:
-			return 'http://%s.tumblr.com/%s/%s' % (fields[1], '/'.join(fields[2:3]))
+			return 'http://%s.tumblr.com/%s/%s' % (fields[1], fields[2], '/'.join(fields[3:]))
 		return None
 
 
