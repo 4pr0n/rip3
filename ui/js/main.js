@@ -23,6 +23,7 @@ function loadSiteStatuses() {
 
 function pageChanged() {
 	$('a:focus').blur(); // Blur focused link
+	$(window).unbind('scroll'); // Stop any pages from infinite scrolling when hidden
 	var keys = getQueryHashKeys();
 	if      ('stats'   in keys) { showPage('page-stats'); }
 	else if ('site'    in keys) { showPage('page-about-site'); }
