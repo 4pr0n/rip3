@@ -34,6 +34,7 @@ class VideoDrtuber(VideoBase):
 		vid = vids[0].replace('&amp;', '&')
 
 		result = self.get_video_info(vid)
+		result['no_video'] = True
 		return result
 
 	@staticmethod

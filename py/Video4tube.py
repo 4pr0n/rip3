@@ -36,17 +36,15 @@ class Video4tube(VideoBase):
 		from os import environ
 		json = loads(r)
 		temp = json[qualities[-1]]['token']
-		vid = temp
-		'''
+		#vid = temp
+		# Inject requester's IP into the URL
 		vid = temp[:temp.find('&ip=')]
 		vid += '&ip=%s' % environ.get('REMOTE_ADDR', '127.0.0.1')
 		temp = temp[temp.find('&ip=')+4:]
 		vid += temp[temp.find('&'):]
-		'''
 
 		result = self.get_video_info(vid)
-		result['poster'] = None # Beeg doesn't provide video splash images
-		#result['no_video'] = True # Don't embed video
+		result['no_video'] = True
 		return result
 
 	@staticmethod
