@@ -14,7 +14,7 @@ def delete_album(host, album, blacklist, reason, admin):
 		response += 'album %s (%d views) was ' % (path, views)
 		if blacklist:
 			try:
-				db.insert('blacklist', (host, name, reason, admin))
+				db.insert('blacklist', (host, album, reason, admin))
 				response += 'blacklisted and '
 			except Exception, e:
 				response += 'not blacklisted (%s) and ' % str(e)
@@ -47,7 +47,7 @@ def delete_user(user, blacklist, reason, admin):
 		response += 'album %s (%d views) was ' % (path, views)
 		if blacklist:
 			try:
-				db.insert('blacklist', (host, name, reason, admin))
+				db.insert('blacklist', (host, album, reason, admin))
 				response += 'blacklisted and '
 			except Exception, e:
 				response += 'not blacklisted (%s) and ' % str(e)

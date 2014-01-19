@@ -67,9 +67,9 @@ def rip_album(keys):
 		# Blacklist check
 		host = ripper.get_host()
 		album = ripper.get_album_name()
-		reason = db.select_one('reason', 'blacklist', 'host like ? and album like ?', [host, album])
-		if reason != None:
-			return err('album %s_%s is blacklisted because ' % (host, album, reason))
+		blacklist_count = db.count('blacklist', 'host like ? and album like ?', [host, album])
+		if blacklist_count > 0:
+			return err('that album (%s_%s) is blacklisted' % (host, album))
 
 		return ripper.start()
 	except Exception, e:
