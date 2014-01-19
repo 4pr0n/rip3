@@ -49,6 +49,13 @@ class SiteCghub(SiteBase):
 		return result
 
 	@staticmethod
+	def get_url_from_album_path(album):
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != SiteCghub.get_host():
+			return None
+		return 'http://%s.cghub.com/images' % fields[1]
+
+	@staticmethod
 	def test():
 		'''
 			Test that ripper is working as expected.

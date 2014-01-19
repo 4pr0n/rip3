@@ -62,6 +62,7 @@ class _SampleSite(SiteBase):
 	def get_url_from_album_path(album):
 		'''
 			For divining a url based on the album name
+			Basically, do the opposite of what get_album_name() does
 		'''
 		fields = album.split('_')
 		if len(fields) < 2 or fields[0] != _SampleSite.get_host():

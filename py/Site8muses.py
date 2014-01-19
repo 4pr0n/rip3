@@ -43,6 +43,13 @@ class Site8muses(SiteBase):
 		return result
 
 	@staticmethod
+	def get_url_from_album_path(album):
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != Site8muses.get_host():
+			return None
+		return 'http://www.8muses.com/index/category/%s' % fields[1]
+
+	@staticmethod
 	def test():
 		'''
 			Test that ripper is working as expected.

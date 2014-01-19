@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-'''
-	Skeleton class for site ripper
-'''
 from SiteBase import SiteBase
 
 class SiteAnonib(SiteBase):
@@ -21,6 +18,8 @@ class SiteAnonib(SiteBase):
 
 	def sanitize_url(self):
 		self.url = self.url.replace('+50.html', '.html').replace('-100.html', '.html')
+		self.url = self.url.split('#')[0]
+		self.url = self.url.split('?')[0]
 		return self.url # No sanitization needed
 
 	def get_album_name(self):
@@ -38,6 +37,16 @@ class SiteAnonib(SiteBase):
 		for link in httpy.between(r, '/img.php?path=', '"'):
 			result.append(link)
 		return result
+
+	@staticmethod
+	def get_url_from_album_path(album):
+		# anonib_tblr-34871
+		# http://www.anonib.com/tblr/res/34871.html#i34871
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != SiteAnonib.get_host():
+			return None
+		subfields = fields[1].split('-')
+		return 'http://anonib.com/%s/res/%s.html' % (subfields[0], subfields[1])
 
 	@staticmethod
 	def test():

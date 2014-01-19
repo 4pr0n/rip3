@@ -63,6 +63,16 @@ class Site4chan(SiteBase):
 		return results
 
 	@staticmethod
+	def get_url_from_album_path(album):
+		# 4chan_b-34871
+		# http://boards.4chan.org/b/res/34871
+		fields = album.split('_')
+		if len(fields) < 2 or fields[0] != Site4chan.get_host():
+			return None
+		subfields = fields[1].split('-')
+		return 'http://boards.4chan.org/%s/res/%s' % (subfields[0], subfields[1])
+
+	@staticmethod
 	def test():
 		'''
 			Test that ripper is working as expected.
