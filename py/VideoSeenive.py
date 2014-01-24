@@ -19,9 +19,11 @@ class VideoSeenive(VideoBase):
 		return 'http://seenive.com/v/1031116119903268864'
 
 	def rip_video(self):
+		if not 'seenive.com/v/' in self.url:
+			raise Exception('video ripper can only rip single videos at a time. try the album ripper for user pages')
 		r = self.httpy.get(self.url)
 		if not 'source src="' in r:
-			raise Exception('could not find source src=" at ' % self.url)
+			raise Exception('could not find source src=" at %s' % self.url)
 		vid = self.httpy.between(r, 'source src="', '"')[0]
 
 		result = self.get_video_info(vid)
