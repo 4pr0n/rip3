@@ -17,7 +17,9 @@ class SiteTumblr(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
-		return 'http://galaxiesspinperfectly.tumblr.com/post/28457572012/thegirlcrushing-lolfuckthis-had-a-hangover'
+		return 'http://dirtyred69.tumblr.com/tagged/nipple%20piercing'
+		#return 'http://dirtyred69.tumblr.com/archive'
+		#return 'http://galaxiesspinperfectly.tumblr.com/post/28457572012/thegirlcrushing-lolfuckthis-had-a-hangover'
 		#return 'http://kittykin5.tumblr.com/'
 		#return 'http://topinstagirls.tumblr.com/tagged/berlinskaya'
 
@@ -69,12 +71,12 @@ class SiteTumblr(SiteBase):
 			self.post_type = 'account'
 			return '%s' % self.user
 
-	def get_api_url(self, offset=0):
+	def get_api_url(self, offset=0, posttype='photo'):
 		if self.post_type == 'post':
 			postid = self.url.split('/')[-1]
 			return 'http://api.tumblr.com/v2/blog/%s.tumblr.com/posts?id=%s&api_key=%s' % (self.user, postid, self.api_key)
 		url  = 'http://api.tumblr.com/v2/blog/%s' % self.user
-		url += '.tumblr.com/posts/photo'
+		url += '.tumblr.com/posts/%s' % posttype
 		url += '?api_key=%s' % self.api_key
 		url += '&offset=%d' % offset
 		if self.post_type == 'tagged':
@@ -93,26 +95,36 @@ class SiteTumblr(SiteBase):
 		httpy = Httpy()
 
 		result = []
-		offset = 0
-		while True:
-			url = self.get_api_url(offset=offset)
-			r = httpy.get(url)
-			json = loads(r)
-			if not 'response' in json or not 'posts' in json['response']:
-				#raise Exception('no posts found at %s' % self.url)
-				break
+		for posttype in ['photo', 'video']:
+			offset = 0
+			while True:
+				url = self.get_api_url(offset=offset, posttype=posttype)
+				r = httpy.get(url)
+				json = None
+				try:
+					json = loads(r)
+				except:
+					pass
+				if json == None or 'response' not in json or 'posts' not in json['response']:
+					#raise Exception('no posts found at %s' % self.url)
+					break
 
-			posts = json['response']['posts']
-			if len(posts) == 0: break
+				posts = json['response']['posts']
+				if len(posts) == 0: break
 
-			for post in posts:
-				for photos in post['photos']:
-					result.append(photos['original_size']['url'])
-			if self.post_type == 'post': break
+				for post in posts:
+					if 'photos' in post:
+						for photos in post['photos']:
+							result.append(photos['original_size']['url'])
+					elif 'video_url' in post:
+						result.append(post['video_url'])
+				if self.post_type == 'post': break
+				if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
+					break
+				offset += 20
+				sleep(1)
 			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
 				break
-			offset += 20
-			sleep(1)
 		return result
 
 	@staticmethod
@@ -148,6 +160,8 @@ class SiteTumblr(SiteBase):
 		url = SiteTumblr.get_sample_url()
 		s = SiteTumblr(url)
 		urls = s.get_urls()
+		for i,u in enumerate(urls):
+			print i,u
 		expected = 4
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
