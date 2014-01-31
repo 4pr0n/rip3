@@ -13,7 +13,8 @@ class SiteImgur(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
-		return 'http://imgur.com/a/RdXNa'
+		#return 'http://imgur.com/a/RdXNa'
+		return 'http://arseredraw.imgur.com/'
 
 	@staticmethod
 	def can_rip(url):
@@ -115,6 +116,7 @@ class SiteImgur(SiteBase):
 			url = image['links']['original']
 			result.append({
 				'url' : url,
+				'saveas' : url[url.rfind('/')+1:],
 				'metadata' : '%s%s' % (title, caption)
 			})
 			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
@@ -138,7 +140,10 @@ class SiteImgur(SiteBase):
 				# Image is gone.
 				# Add it anyway so RipManager will mark the image as 'errored'
 				pass
-			result.append(link)
+			result.append({
+				'url' : link,
+				'saveas' : link[link.rfind('/')+1:]
+			})
 			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
 				break
 		return result
@@ -185,7 +190,8 @@ class SiteImgur(SiteBase):
 			album = 'http://imgur.com/a/%s' % albumid
 			for image in self.get_urls_album(album):
 				# Tack this album's index/albumid to image
-				result.append('%03d_%s_%s' % (index + 1, albumid, image))
+				image['saveas'] = '%03d_%s_%s' % (index + 1, albumid, image['saveas'])
+				result.append(image)
 			sleep(2)
 			if len(result) > SiteBase.MAX_IMAGES_PER_RIP:
 				break
@@ -258,6 +264,8 @@ class SiteImgur(SiteBase):
 		url = SiteImgur.get_sample_url()
 		s = SiteImgur(url)
 		urls = s.get_urls()
+		for (i,u) in enumerate(urls):
+			print i, u
 		expected = 4
 		if len(urls) < expected:
 			return 'expected at least %d images, got %d. url: %s' % (expected, len(urls), url)
