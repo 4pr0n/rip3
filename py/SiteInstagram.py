@@ -14,7 +14,7 @@ class SiteInstagram(SiteBase):
 
 	@staticmethod
 	def get_sample_url():
-		return 'http://instagram.com/mileys_lesbian'
+		return 'http://instagram.com/taylorswift'
 
 	def sanitize_url(self):
 		if 'instagram.com/p/' in self.url:
