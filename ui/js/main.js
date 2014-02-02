@@ -780,23 +780,29 @@ $(document).keydown(function(e) {
 	if ($('#albums-image').css('display') != "none") {
 		if (e.keyCode == 37 || e.keyCode == 39) {
 			e.preventDefault();
-			if (e.keyCode == 37) {
+			if (e.keyCode == 37) { // left
 				imageNo-=1;
-			} else {
+			} else { // right
 				imageNo+=1;
 			}
+			// if we reach the ends, just close the image viewer
 			if (imageNo < 0 || imageNo >= $('.thumbnail').length) {
 				$('#albums-image').click();
+				// alernatively if you want to loop
+				// imageNo += $('.thumbnail').length;
+				// imageNo %= $('.thumbnail').length;
+				// $('.thumbnail')[imageNo].click();
 			} else {
 				$('.thumbnail')[imageNo].click();
 			}
 		}
-		if (e.keyCode == 27)
+		if (e.keyCode == 27) // esc - closes image
 			$('#albums-image').click();
 	}
 })
 
-var imageNo = 1; // this value is unused
+// this value is unused, however I wanted to add a shortcut to open the viewer
+var imageNo = 1;
 
 function addAlbumImage(image) {
 	var $a = $('<a/>')
