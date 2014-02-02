@@ -119,6 +119,7 @@ function addAlbumPreview(path, album) {
 			.data('image', image)
 			.click(function(e) {
 				e.stopPropagation();
+				imageNo = $('.thumbnail').index(this);
 				var img = $(this).data('image');
 				var w = img.width, h = img.height;
 				var ratio = $(window).width() / img.width;
@@ -774,6 +775,28 @@ function loadAlbumImages() {
 			}, 500);
 		});
 }
+
+$(document).keydown(function(e) {
+	if ($('#albums-image').css('display') != "none") {
+		if (e.keyCode == 37 || e.keyCode == 39) {
+			e.preventDefault();
+			if (e.keyCode == 37) {
+				imageNo-=1;
+			} else {
+				imageNo+=1;
+			}
+			if (imageNo < 0 || imageNo >= $('.thumbnail').length) {
+				$('#albums-image').click();
+			} else {
+				$('.thumbnail')[imageNo].click();
+			}
+		}
+		if (e.keyCode == 27)
+			$('#albums-image').click();
+	}
+})
+
+var imageNo = 1; // this value is unused
 
 function addAlbumImage(image) {
 	var $a = $('<a/>')
