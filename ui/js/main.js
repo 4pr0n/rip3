@@ -124,11 +124,19 @@ function addAlbumPreview(path, album) {
 				var ratio = $(window).width() / img.width;
 				w *= ratio; h *= ratio;
 				var t = $(window).scrollTop() + Math.max($('.navbar').height(), ($(window).height() / 2) - (h / 2));
+				var l = 0;
+				if (h > $(window).height()) {
+					var ratio = $(window).height() / img.height;
+					w = img.width, h = img.height;
+					w *= ratio; h *= ratio;
+					l = ($(window).width() / 2) - (w / 2);
+				}
 				$('#albums-image')
 					.css({
 						width: w,
 						height: h,
-						top: t
+						top: t,
+						left: l
 					});
 				var $full = $('<img/>')
 					.css({
