@@ -127,7 +127,7 @@ function addAlbumPreview(path, album) {
 				var t = $(window).scrollTop() + Math.max($('.navbar').height(), ($(window).height() / 2) - (h / 2));
 				var l = 0;
 				if (h > $(window).height()) {
-					var ratio = $(window).height() / img.height;
+					var ratio = ($(window).height() - Math.max($('.navbar').height()))/ img.height;
 					w = img.width, h = img.height;
 					w *= ratio; h *= ratio;
 					l = ($(window).width() / 2) - (w / 2);
@@ -777,7 +777,7 @@ function loadAlbumImages() {
 }
 
 $(document).keydown(function(e) {
-	if ($('#albums-image').css('display') != "none") {
+	if ($('#albums-image').css('display') != "none" || $('#album-image').css('display') != "none") {
 		if (e.keyCode == 37 || e.keyCode == 39) {
 			e.preventDefault();
 			if (e.keyCode == 37) { // left
@@ -796,8 +796,11 @@ $(document).keydown(function(e) {
 				$('.thumbnail')[imageNo].click();
 			}
 		}
-		if (e.keyCode == 27) // esc - closes image
+		if (e.keyCode == 27) { 
+			// esc - closes image
 			$('#albums-image').click();
+			$('#album-image').click();
+		}
 	}
 })
 
@@ -845,6 +848,8 @@ function addAlbumImage(image) {
 		.append( $a )
 		.appendTo( $('#album-container') )
 		.click(function(e) {
+			imageNo = $('.col-xs-12.col-sm-6.col-md-4.col-lg-3.text-center').index(this);
+			console.log(imageNo);
 			var imgdata = $(this).find('img').data('image');
 			// Caption
 			var $caption = $('<div/>')
@@ -866,11 +871,19 @@ function addAlbumImage(image) {
 			var ratio = $(window).width() / w;
 			w *= ratio; h *= ratio;
 			var t = $(window).scrollTop() + Math.max($('.navbar').height(), ($(window).height() / 2) - (h / 2));
+			var l = 0;
+			if (h > $(window).height()) {
+				var ratio = ($(window).height() - Math.max($('.navbar').height()))/ imgdata.height;
+				w = imgdata.width, h = imgdata.height;
+				w *= ratio; h *= ratio;
+				l = ($(window).width() / 2) - (w / 2);
+			}
 			$('#album-image')
 				.css({
-					width: w + 'px',
-					height: h + 'px',
-					top: t
+					width: w,
+					height: h,
+					top: t,
+					left: l
 				});
 			var $full = $('<img/>')
 				.attr('src', imgdata.image)
