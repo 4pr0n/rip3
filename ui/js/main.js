@@ -786,14 +786,15 @@ $(document).keydown(function(e) {
 				imageNo+=1;
 			}
 			// if we reach the ends, just close the image viewer
-			if (imageNo < 0 || imageNo >= $('.thumbnail').length) {
+			if (imageNo < 0 || imageNo >= $('.thumbnail:visible').length) {
 				$('#albums-image').click();
+				$('#album-image').click();
 				// alernatively if you want to loop
 				// imageNo += $('.thumbnail').length;
 				// imageNo %= $('.thumbnail').length;
 				// $('.thumbnail')[imageNo].click();
 			} else {
-				$('.thumbnail')[imageNo].click();
+				$('.thumbnail:visible')[imageNo].click();
 			}
 		}
 		if (e.keyCode == 27) { 
