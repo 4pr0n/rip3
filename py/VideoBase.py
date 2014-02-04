@@ -53,8 +53,8 @@ class VideoBase(object):
 		meta = self.httpy.get_meta(url)
 		filesize = int(meta.get('Content-Length', '0'))
 		filetype = meta.get('Content-Type', 'unknown')
-		if not filetype.startswith('video/'):
-			raise Exception('content-type (%s) not "video/" at %s' % (filetype, vid))
+		if not filetype.startswith('video/') and not filetype.startswith('audio/'):
+			raise Exception('content-type (%s) not "video/" at %s' % (filetype, url))
 		else:
 			filetype = filetype.replace('video/', '').replace('x-', '')
 		return {
