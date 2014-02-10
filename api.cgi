@@ -256,8 +256,8 @@ def get_album(keys):
 			'height'   : height,
 			'filesize' : filesize,
 			'thumb'    : thumb,
-			'twidth'   : twidth,
-			'theight'  : theight,
+			't_width'  : twidth,
+			't_height' : theight,
 			'metadata' : metadata
 		})
 	cur.close()
@@ -335,7 +335,7 @@ def get_albums(keys):
 	q = '''
 		select
 			a.host, a.name, a.path, a.count, a.zip, a.reports,
-			type, image_name, width, height, thumb_name, t_width, t_height
+			type, image_name, width, height, thumb_name, t_width, t_height, medias.url, medias.filesize
 		from 
 			(select
 					rowid, host, name, path, count, zip, reports, accessed, modified, created, host, reports, count, views
@@ -357,7 +357,7 @@ def get_albums(keys):
 	curexec = cursor.execute(q, values)
 	result = []
 	admin_user = get_admin()
-	for (host, name, path, count, zipfile, reports, mediatype, image, w, h, thumb, tw, th) in curexec:
+	for (host, name, path, count, zipfile, reports, mediatype, image, w, h, thumb, tw, th, url, filesize) in curexec:
 		d = get_key_from_dict_list(result, path)
 		if not 'preview' in d[path]:
 			d[path] = {
@@ -378,7 +378,9 @@ def get_albums(keys):
 				'height' : h,
 				'thumb' : thumb,
 				't_width' : tw,
-				't_height' : th
+				't_height' : th,
+				'url' : url,
+				'filesize' : filesize
 			})
 		if admin_user != None:
 			d[path]['admin'] = {

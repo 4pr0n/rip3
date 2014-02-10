@@ -819,26 +819,26 @@ function addAlbumImage(image) {
 		image.width = 160;
 		image.height = 80;
 		image.thumb = './ui/images/nothumb.png';
-		image.twidth = 200;
-		image.theight = 200;
+		image.t_width = 200;
+		image.t_height = 200;
 	}
 	// Expand image to have height 200px
-	var ratio = 200 / image.theight;
-	image.theight *= ratio;
-	image.twidth *= ratio;
+	var ratio = 200 / image.t_height;
+	image.t_height *= ratio;
+	image.t_width *= ratio;
 	var $img = $('<img/>')
 		.attr('src', image.thumb)
 		.css({
-			'width'  : image.twidth + 'px',
-			'height' : image.theight + 'px',
+			'width'  : image.t_width + 'px',
+			'height' : image.t_height + 'px',
 		})
 		.data('image', {
 			'image'   : image.image,
 			'width'   : image.width,
 			'height'  : image.height,
 			'thumb'   : image.thumb,
-			'twidth'  : image.twidth,
-			'theight' : image.theight,
+			't_width' : image.t_width,
+			't_height': image.t_height,
 			'filesize': image.filesize,
 			'url'     : image.url
 		})
