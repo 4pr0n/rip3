@@ -36,6 +36,8 @@ class SiteFuskator(SiteBase):
 		result = []
 		for image in self.httpy.between(r, ".src=baseUrl+'", "'"):
 			link = '%s%s' % (baseurl, image)
+			if link.startswith('//'):
+				link = 'http:%s' % link
 			result.append(link)
 		return result
 
