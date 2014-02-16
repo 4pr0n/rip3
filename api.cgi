@@ -87,6 +87,20 @@ def rip_video(keys):
 	if not 'url' in keys:
 		return err('url required')
 
+	from py.DB import DB
+	db = DB()
+
+	from time import gmtime
+	from calendar import timegm
+	now = timegm(gmtime())
+	values = [
+		now,  # created
+		keys['url'],        # source url		
+		environ.get('REMOTE_ADDR', '0.0.0.0'), # author
+	]
+	album_id = db.insert('videos', values)
+	db.commit()
+
 	url = keys['url']
 	try:
 		from py.VideoBase import VideoBase

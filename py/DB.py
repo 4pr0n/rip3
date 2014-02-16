@@ -107,6 +107,11 @@ SCHEMA = {
 	'config' :
 		'key   text primary key,' +
 		'value text',
+
+	'videos' :
+		'accessed   integer,' +
+		'author     text,' +    # IP of user who ripped it
+		'url        text',
 }
 
 '''
@@ -403,3 +408,7 @@ if __name__ == '__main__':
 	print 'saving "yes" to config key "test"...'
 	db.set_config('test', 'yes')
 	print 'db.get_config("test") = "%s"' % db.get_config('test')
+	db.create_table('videos', SCHEMA['videos'])
+	album_id = db.insert('videos', [11, 'http://what', 'damn'])
+	print album_id
+	db.commit()
