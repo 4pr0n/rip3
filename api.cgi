@@ -73,7 +73,15 @@ def rip_album(keys):
 
 		return ripper.start()
 	except Exception, e:
-		return err(str(e), tb=format_exc())
+		e = format_exc()  # just to retain original error.	
+		try:
+			from py.VideoBase import VideoBase
+			Ripper = VideoBase.get_ripper(url)			
+			ripper = Ripper(url)
+			return ripper.rip_video()
+		except Exception, ex:
+			pass
+		return err(str(e), tb=e)
 
 def rip_video(keys):
 	if not 'url' in keys:
