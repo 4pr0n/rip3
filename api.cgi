@@ -313,7 +313,7 @@ def get_albums(keys):
 	orderby = keys.get('sort', None)
 	ascdesc = keys.get('order', None)
 
-	wheres = []
+	wheres = ['ready = 1']
 	values = []
 	if host != None:
 		wheres.append('host like ?')
