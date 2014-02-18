@@ -110,8 +110,8 @@ SCHEMA = {
 
 	'videos' :
 		'accessed   integer,' +
-		'author     text,' +    # IP of user who ripped it
-		'url        text',
+		'url        text,' +
+		'author     text',    # IP of user who ripped it
 }
 
 '''
