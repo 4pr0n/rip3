@@ -167,6 +167,11 @@ class DB:
 			self.debug('__init__: creating database')
 
 		self.conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+		# sets to UTF-8
+		db.set_character_set('utf8')
+		self.conn.cursor().execute('SET NAMES utf8;')
+		self.conn.cursor().execute('SET CHARACTER SET utf8;')
+		self.conn.cursor().execute('SET character_set_connection=utf8;')
 		if need_to_create:
 			# Create tables
 			for table in SCHEMA:
@@ -379,6 +384,7 @@ class DB:
 		cur = self.conn.cursor()
 		import re
 		where = re.sub('\?','%s',where)
+		changes = re.sub('\?','%s',changes)
 		if where != '':
 			where = 'where %s' % where
 		query = '''
@@ -386,6 +392,7 @@ class DB:
 				set %s
 				%s
 		''' % (table, changes, where)
+		print query
 		cur.execute(query, values)
 		cur.close()
 
@@ -444,6 +451,7 @@ if __name__ == '__main__':
 	album_id = db.insert('videos', [11, 'http://what', 'damn'])
 	# print album_id
 	# db.commit()
+	self.db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ? accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
 	count = db.count('albums', 'author like %s', '127.0.0.1')
 	print count
 	print 'ok'
