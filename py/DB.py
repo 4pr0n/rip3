@@ -327,14 +327,14 @@ class DB:
 		import re
 		query = re.sub('\?','%s',query)
 		where = re.sub('\?','%s',where)
-		print query
+		# print query
 		# return
 		if where != '':
 			query += '''
 				WHERE %s
 			''' % where
 		# print query
-		cur.execute(query, values)
+		cur.execute(query, values) # originally returned the execute.
 		return cur
 	
 	def select_one(self, what, table, where='', values=[]):
@@ -357,6 +357,8 @@ class DB:
 				values: Values to insert into where condition
 		'''
 		cur = self.conn.cursor()
+		import re
+		where = re.sub('\?','%s',where)
 		query = '''
 			delete from %s
 				where %s
@@ -375,6 +377,8 @@ class DB:
 				values: Values to insert into where condition
 		'''
 		cur = self.conn.cursor()
+		import re
+		where = re.sub('\?','%s',where)
 		if where != '':
 			where = 'where %s' % where
 		query = '''

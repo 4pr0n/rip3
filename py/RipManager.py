@@ -125,6 +125,7 @@ class RipManager(object):
 		cursor = self.db.conn.cursor()
 		curexec = cursor.execute(q)
 		url = {}
+		curexec = cursor.fetchall()
 		for (album_id, index, url, saveas, mediatype, metadata, added, albumpath) in curexec:
 			url = {
 				'album_id' : album_id,
