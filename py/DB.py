@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 '''
-	Class for facilitating communication with a sqlite database.
+	Class for facilitating communication with a mysql database.
 '''
 
 from os   import path, getcwd, sep as ossep
@@ -19,19 +19,27 @@ except ImportError:
 	import sqlite as sqlite3
 	# This will throw an ImportError if sqlite isn't found
 
+try:
+	import MySQLdb
+except:
+	print "You need to install MySQLdb"
+	raise
+
+
 '''
 	Database schema.
 	Keys are table names, values are rows.
 '''
 SCHEMA = {
 	'albums' :
+		'rowid 	integer primary key AUTO_INCREMENT,' +
 		'name       text,' +    # Name of the album (unique per host)
 		'url        text,' +    # Source
 		'host       text,' +    # Name of site
 		'ready      integer,' + # If album is completed
 		'pending    integer,' + # If album is not completed
 		'filesize   integer,' + # Total bytes for all content
-		'path       text primary key,' + # Combination of host_name
+		'path       text,' + # Combination of host_name
 		'created    integer,' + # Date created
 		'modified   integer,' + # Date last modified
 		'accessed   integer,' + # Date accessed
@@ -57,7 +65,7 @@ SCHEMA = {
 		't_width    integer,' + # Thumb width
 		't_height   integer,' + # Thumb height
 		'metadata   text,' +    # Info about image
-		'foreign key(album_id) references albums(rowid),' +
+		# 'foreign key(album_id) references albums(rowid),' +
 		'primary key(album_id, i_index)',
 
 	'urls' :
@@ -72,7 +80,7 @@ SCHEMA = {
 		'primary key(album_id, i_index)',
 
 	'sites' :
-		'host      text primary key,' + # Host name
+		'host      text,' + # Host name
 		'available integer,' + # If host is available
 		'message   text,' +    # Message if not available
 		'checked   integer',   # Date last checked for availability
@@ -80,19 +88,18 @@ SCHEMA = {
 	'reports' :
 		'album    text,' +
 		'user     text,' +
-		'message  text,' +
-		'foreign key(album) references albums(path),' +
-		'primary key(album, user)',
+		'message  text' +
+		# 'foreign key(album) references albums(path),',
+		'',
 
 	'blacklist' :
 		'host    text,' + # Name of host 
 		'album   text,' + # Name of album
 		'reason  text,' + # Reason for blacklist
-		'admin   text,' + # IP of admin blacklisting
-		'primary key(host, album)',
+		'admin   text', # IP of admin blacklisting
 
 	'users' :
-		'ip              text primary key,' + # IP of user
+		'ip              text,' + # IP of user
 		'warning_message text,' +    # Warning message to display to user
 		'warnings        integer,' + # Number of times user has been warned
 		'warned          integer,' + # Date user was last warned
@@ -101,12 +108,12 @@ SCHEMA = {
 		'banned_url      text',      # URL user was banned for
 
 	'admins' :
-		'username text primary key,' +
+		'username text,' +
 		'cookie   text',
 
 	'config' :
-		'key   text primary key,' +
-		'value text',
+		'`key`   text,' +
+		'`value` text',
 
 	'videos' :
 		'accessed   integer,' +
@@ -144,13 +151,21 @@ class DB:
 		'''
 		self.logger = stderr
 		need_to_create = False
-		if path.exists(DB_FILE):
-			self.debug('__init__: connecting to database file: %s' % DB_FILE)
-		else:
+		try:
+			self.conn = db = MySQLdb.connect(host="localhost", # your host, usually localhost
+	                     user="root", # your username
+	                      passwd="root", # your password
+	                      db="rip3") # name of the data base
+			self.debug('__init__: connecting to database')
+		except:
+			self.conn = db = MySQLdb.connect(host="localhost", # your host, usually localhost
+	                     user="root", # your username
+	                      passwd="root") # your password
+			self.conn.query("create database rip3")
+			self.conn.query("use rip3")
 			need_to_create = True
-			self.debug('__init__: database file (%s) not found, creating...' % DB_FILE)
+			self.debug('__init__: creating database')
 
-		self.conn = sqlite3.connect(DB_FILE)
 		self.conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
 		if need_to_create:
 			# Create tables
@@ -161,7 +176,6 @@ class DB:
 				self.create_index(index, INDICES[index])
 			# Commit
 			self.commit()
-
 
 	def debug(self, text):
 		'''
@@ -207,6 +221,7 @@ class DB:
 
 		query = 'create table if not exists %s' % table_name
 		query = '%s(\n%s%s\n%s)' % (query, ',\n'.join(rows), ',' if len(keys) > 0 else '', ',\n'.join(keys))
+		# print query
 		cur.execute(query)
 		cur.close()
 
@@ -223,7 +238,7 @@ class DB:
 				if not exists 
 				%s on %s(%s)
 		''' % (name, index, key)
-		cur.execute(query)
+		# cur.execute(query)
 		cur.close()
 	
 	def commit(self):
@@ -255,12 +270,13 @@ class DB:
 				Exception if problems ocucrred while inserting into db.
 		'''
 		cur = self.conn.cursor()
-		questions = ','.join(['?'] * len(values))
+		questions = ','.join(['%s'] * len(values))
 		query = '''
 			insert into 
 				%s 
 				values (%s)
 		''' % (table, questions)
+		# print query 
 		result = cur.execute(query, values)
 		last_row_id = cur.lastrowid
 		cur.close()
@@ -282,6 +298,7 @@ class DB:
 				Exception if errors occurred while querying database
 		'''
 		cur = self.select('count(*)', table, where=where, values=values)
+		# cur = self.conn.cursor()
 		result = cur.fetchone()
 		cur.close()
 		return result[0]
@@ -307,11 +324,18 @@ class DB:
 				FROM
 				%s
 		''' % (what, table)
+		import re
+		query = re.sub('\?','%s',query)
+		where = re.sub('\?','%s',where)
+		print query
+		# return
 		if where != '':
 			query += '''
 				WHERE %s
 			''' % where
-		return cur.execute(query, values)
+		print query
+		cur.execute(query, values)
+		return cur
 	
 	def select_one(self, what, table, where='', values=[]):
 		'''
@@ -375,10 +399,13 @@ class DB:
 		query = '''
 			select value
 				from config
-				where key = "%s"
+				where `key` = "%s"
 		''' % key
 		execur = cur.execute(query)
-		result = execur.fetchone()
+		# result = self.conn.use_result().fetch_row()
+		result = cur.fetchone()
+
+		# print r.fetch_row()
 		cur.close()
 		if result == None:
 			return None
@@ -394,13 +421,14 @@ class DB:
 		'''
 		cur = self.conn.cursor()
 		query = '''
-			insert or replace into
-				config (key, value)
-				values (?, ?)
+			replace into
+				config (`key`, `value`)
+				values (%s, %s)
 		'''
+		# print query % (key,value)
 		execur = cur.execute(query, [key, value])
-		result = execur.fetchone()
-		self.commit()
+		# result = execur.fetchone()
+		# self.commit()
 		cur.close()
 
 if __name__ == '__main__':
@@ -408,7 +436,10 @@ if __name__ == '__main__':
 	print 'saving "yes" to config key "test"...'
 	db.set_config('test', 'yes')
 	print 'db.get_config("test") = "%s"' % db.get_config('test')
-	db.create_table('videos', SCHEMA['videos'])
+	# db.create_table('videos', SCHEMA['videos'])
 	album_id = db.insert('videos', [11, 'http://what', 'damn'])
-	print album_id
-	db.commit()
+	# print album_id
+	# db.commit()
+	count = db.count('albums', 'author like %s', '127.0.0.1')
+	print count
+	print 'ok'

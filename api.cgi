@@ -36,7 +36,7 @@ def count_rips_by_user(keys):
 	user = keys.get('user', environ.get('REMOTE_ADDR', '0.0.0.0'))
 	from py.DB import DB
 	db = DB()
-	count = db.count('albums', 'author like ?', [user])
+	count = db.count('albums', 'author like %s', [user])
 	return {
 		'count' : count,
 		'user'  : user
@@ -44,6 +44,7 @@ def count_rips_by_user(keys):
 
 
 def rip_album(keys):
+
 	if not 'url' in keys:
 		return err('url required')
 
@@ -67,7 +68,7 @@ def rip_album(keys):
 		# Blacklist check
 		host = ripper.get_host()
 		album = ripper.get_album_name()
-		blacklist_count = db.count('blacklist', 'host like ? and album like ?', [host, album])
+		blacklist_count = db.count('blacklist', 'host like %s and album like %s', [host, album])
 		if blacklist_count > 0:
 			return err('that album (%s_%s) is blacklisted' % (host, album))
 
@@ -120,14 +121,14 @@ def get_album_progress(keys):
 	from time import gmtime
 	from calendar import timegm
 	db = DB()
-	(rowid,created) = db.select('rowid, created', 'albums', 'path like ?', [keys['album']]).fetchone()
-	total      = db.select_one('count', 'albums', 'rowid = ?', [rowid])
-	pending    = db.count('urls', 'album_id = ?', [rowid])
-	completed  = db.count('medias', 'album_id = ? and valid = 1', [rowid])
-	errored    = db.count('medias', 'album_id = ? and error is not null', [rowid])
+	(rowid,created) = db.select('rowid, created', 'albums', 'path like %s', [keys['album']]).fetchone()
+	total      = db.select_one('count', 'albums', 'rowid = %s', [rowid])
+	pending    = db.count('urls', 'album_id = %s', [rowid])
+	completed  = db.count('medias', 'album_id = %s and valid = 1', [rowid])
+	errored    = db.count('medias', 'album_id = %s and error is not null', [rowid])
 	inprogress = total - pending - completed - errored
 	elapsed    = timegm(gmtime()) - created
-	totalsize = db.select_one('filesize', 'albums', 'rowid = ?', [rowid])
+	totalsize = db.select_one('filesize', 'albums', 'rowid = %s', [rowid])
 	return {
 		'album'      : keys['album'],
 		'total'      : total,
@@ -148,7 +149,7 @@ def get_album_info(keys):
 		select 
 			rowid, name, url, host, ready, filesize, created, modified, count, zip, views, metadata, author
 		from albums
-		where path like ?
+		where path like %s
 	'''
 	from py.DB import DB
 	db = DB()
@@ -179,20 +180,20 @@ def get_album_info(keys):
 	# Update album access time
 	from time import gmtime
 	from calendar import timegm
-	db.update('albums', 'accessed = ?', 'path like ?', [ timegm(gmtime()), keys['album'] ])
-	db.update('albums', 'views = views + 1', 'path like ?', [ keys['album'] ])
+	db.update('albums', 'accessed = %s', 'path like %s', [ timegm(gmtime()), keys['album'] ])
+	db.update('albums', 'views = views + 1', 'path like %s', [ keys['album'] ])
 	db.commit()
 
 	# Check if current user already reported the album
 	user   = keys.get('user', environ.get('REMOTE_ADDR', '0.0.0.0'))
-	report = db.select_one('message', 'reports', 'album like ? and user like ?', [ keys['album'], user ])
+	report = db.select_one('message', 'reports', 'album like %s and user like %s', [ keys['album'], user ])
 	if report != None:
 		response['already_reported'] = report
 
 	# ADMIN functions
 	admin_user = get_admin()
 	if admin_user != None:
-		q = 'select user, message from reports where album like ?'
+		q = 'select user, message from reports where album like %s'
 		reports = []
 		curexec = cur.execute(q, [ keys['album'] ])
 		for (user, message) in curexec:
@@ -206,12 +207,12 @@ def get_album_info(keys):
 			'reports' : reports
 		}
 
-		author_rips = db.count('albums', 'author = ?', [author])
+		author_rips = db.count('albums', 'author = %s', [author])
 
 		q = '''
 			select warning_message, warnings, warned, banned, banned_reason, banned_url
 			from users
-			where ip = ?
+			where ip = %s
 		'''
 		curexec = cur.execute(q, [author])
 		one = curexec.fetchone()
@@ -252,7 +253,7 @@ def get_album(keys):
 		select
 			i_index, medias.url, valid, error, type, image_name, width, height, medias.filesize, thumb_name, t_width, t_height, medias.metadata, albums.path
 		from medias inner join albums on medias.album_id = albums.rowid
-		where albums.path like ?
+		where albums.path like %s
 		order by i_index asc
 		limit %d
 		offset %d
@@ -299,7 +300,7 @@ def get_album_urls(keys):
 	q = '''
 		select %s
 		from medias
-		where album_id in (select rowid from albums where path like ?)
+		where album_id in (select rowid from albums where path like %s)
 		%s
 	''' % (column, where)
 	from py.DB import DB
@@ -316,7 +317,7 @@ def get_album_urls(keys):
 		q = '''
 			select url
 				from urls
-				where album_id in (select rowid from albums where path like ?)
+				where album_id in (select rowid from albums where path like %s)
 		'''
 		curexec = cur.execute(q, [ keys['album'] ])
 		for (url, ) in curexec:
@@ -338,12 +339,12 @@ def get_albums(keys):
 	wheres = ['ready = 1']
 	values = []
 	if host != None:
-		wheres.append('host like ?')
+		wheres.append('host like %s')
 		values.append(host)
 	if author != None:
 		if author == 'mine':
 			author = environ.get('REMOTE_ADDR', '0.0.0.0')
-		wheres.append('author like ?')
+		wheres.append('author like %s')
 		values.append(author)
 	where = ''
 	if len(wheres) > 0:
@@ -451,14 +452,14 @@ def generate_zip(keys):
 
 	from py.DB import DB
 	db = DB()
-	if db.count('albums', 'path like ?', [keys['album']]) == 0:
+	if db.count('albums', 'path like %s', [keys['album']]) == 0:
 		return err('album not found in database')
 
 	# Album exists, zip does not. Zip it. Zip it good.
 	from os      import walk
 	from zipfile import ZipFile, ZIP_STORED
 
-	db.update('albums', 'zip = ?', 'path like ?', [zip_path, keys['album'] ])
+	db.update('albums', 'zip = %s', 'path like %s', [zip_path, keys['album'] ])
 	db.commit()
 
 	z = ZipFile(zip_path, "w", ZIP_STORED) # Using stored to conserve CPU
@@ -484,15 +485,15 @@ def report_album(keys):
 
 	from py.DB import DB
 	db = DB()
-	if db.count('albums', 'path like ?', [album]) == 0:
+	if db.count('albums', 'path like %s', [album]) == 0:
 		return err('album not found; unable to report')
 
-	previous_reason = db.select_one('message', 'reports', 'album like ? and user like ?', [album, user])
+	previous_reason = db.select_one('message', 'reports', 'album like %s and user like %s', [album, user])
 	if previous_reason != None:
 		return err('already reported with reason "%s"' % previous_reason)
 
 	db.insert('reports', [album, user, reason])
-	db.update('albums', 'reports = reports + 1', 'path like ?', [album])
+	db.update('albums', 'reports = reports + 1', 'path like %s', [album])
 	db.commit()
 	return err('album has been reported. the admins will look into this soon.')
 
@@ -512,7 +513,7 @@ def ban_user(keys):
 	db = DB()
 
 	if keys.get('unban', False):
-		db.update('users', 'banned = 0, banned_reason = NULL', 'ip = ?', [user])
+		db.update('users', 'banned = 0, banned_reason = NULL', 'ip = %s', [user])
 		db.commit()
 		return {
 			'color'   : 'success',
@@ -523,15 +524,15 @@ def ban_user(keys):
 	if message == None: return err('message required for ban')
 
 	cursor = db.conn.cursor()
-	if db.count('users', 'ip = ?', [user]):
-		reason = db.select_one('banned_reason', 'users', 'ip = ?', [user])
+	if db.count('users', 'ip = %s', [user]):
+		reason = db.select_one('banned_reason', 'users', 'ip = %s', [user])
 		if reason != None:
 			return {
 				'color'   : 'warning',
 				'user'    : user,
 				'message' : 'user is already banned, reason: "%s"' % reason
 			}
-		db.update('users', 'banned = 1, banned_reason = ?', 'ip = ?', [message, user])
+		db.update('users', 'banned = 1, banned_reason = %s', 'ip = %s', [message, user])
 	else:
 		db.insert('users', (user, None, 0, 0, 1, message, url,) )
 	db.commit()
@@ -553,7 +554,7 @@ def warn_user(keys):
 	db = DB()
 
 	if keys.get('unwarn', False):
-		db.update('users', 'warnings = 0, warning_message = NULL, warned = 0', 'ip = ?', [user])
+		db.update('users', 'warnings = 0, warning_message = NULL, warned = 0', 'ip = %s', [user])
 		db.commit()
 		return {
 			'color'   : 'success',
@@ -566,15 +567,15 @@ def warn_user(keys):
 	from time import gmtime
 	from calendar import timegm
 	cursor = db.conn.cursor()
-	if db.count('users', 'ip = ?', [user]):
-		warn_message = db.select_one('warning_message', 'users', 'ip = ?', [user])
+	if db.count('users', 'ip = %s', [user]):
+		warn_message = db.select_one('warning_message', 'users', 'ip = %s', [user])
 		if warn_message != None:
 			return {
 				'color'   : 'warning',
 				'user'    : user,
 				'message' : 'user is already warned, message: "%s"' % warn_message
 			}
-		db.update('users', 'warnings = warnings + 1, warning_message = ?, warned = ?', 'ip = ?', [message, timegm(gmtime()), user])
+		db.update('users', 'warnings = warnings + 1, warning_message = %s, warned = %s', 'ip = %s', [message, timegm(gmtime()), user])
 	else:
 		db.insert('users', (user, message, 1, timegm(gmtime()), 0, None, None,) )
 	db.commit()
@@ -653,7 +654,7 @@ def get_admin():
 		return None
 	from py.DB import DB
 	db = DB()
-	user = db.select_one('username', 'admins', 'cookie like ?', [cookie])
+	user = db.select_one('username', 'admins', 'cookie like %s', [cookie])
 	return user
 
 def get_keys(): # Get query keys
