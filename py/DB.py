@@ -333,7 +333,7 @@ class DB:
 			query += '''
 				WHERE %s
 			''' % where
-		print query
+		# print query
 		cur.execute(query, values)
 		return cur
 	

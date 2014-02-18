@@ -139,6 +139,7 @@ class SiteBase(object):
 		# Insert empty album into DB
 		now = timegm(gmtime())
 		values = [
+			None,
 			self.album_name, # name
 			self.url,        # source url
 			self.get_host(), # host
@@ -175,7 +176,7 @@ class SiteBase(object):
 		q = '''
 			insert into urls
 			values (%s)
-		''' % ','.join( '?' * len(insertmany[0]) )
+		''' %  ','.join(["%s" for i in range(len(insertmany[0]))])		
 		cursor = self.db.conn.cursor()
 		cursor.executemany(q, insertmany)
 		self.db.commit()
