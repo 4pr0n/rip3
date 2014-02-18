@@ -361,7 +361,7 @@ def get_albums(keys):
 			type, image_name, width, height, thumb_name, t_width, t_height, medias.url, medias.filesize
 		from 
 			(select
-					rowid, host, name, path, count, zip, reports, accessed, modified, created, host, reports, count, views
+					rowid, name, path, count, zip, accessed, modified, created, host, reports, views
 				from 
 					albums 
 				%s
@@ -378,6 +378,7 @@ def get_albums(keys):
 	db = DB()
 	cursor = db.conn.cursor()
 	curexec = cursor.execute(q, values)
+	curexec = cursor.fetchall()
 	result = []
 	admin_user = get_admin()
 	for (host, name, path, count, zipfile, reports, mediatype, image, w, h, thumb, tw, th, url, filesize) in curexec:
