@@ -957,6 +957,57 @@ function startAlbumRip(baseurl) {
 						.prepend( getSpinner() )
 						.prependTo( $('#status-rip-album') );
 				}
+				else if ('type' in json) { // it's a video!
+					// I should copy this into a function, missing the player code (I don't like it.)
+					showPage('page-video');
+					$('#status-rip-video')
+							.removeClass()
+							.slideUp(200, function() { $(this).empty() });
+					$('#video-title').html(json.host + ' <small>' + json.source.replace('http://', '').replace('www.', '').replace(json.host, '') + '</small>');
+					$('#video-info-url')
+						.empty()
+						.append(
+							$('<a/>')
+								.data('url', json.url)
+								.attr('href', json.url)
+								.attr('rel', 'noreferrer')
+								.attr('target', '_BLANK_' + json.host)
+								.mousedown(function(e) {
+									if (e.which === 1) {
+										$(this)
+											.attr('href',
+												'data:text/html;charset=utf-8,\n\n' +
+												'<html><head><meta http-equiv=\'REFRESH\' content=\'0;url=' +
+												json.url +
+												'\'></head><body><h1>redirecting...</h1></body></html>\n\n')
+									} else {
+										$(this).attr('href', $(this).data('url'));
+									}
+								})
+								.html('<span class="glyphicon glyphicon-download"></span> <b>download</b>')
+						);
+					$('#video-info-size')
+							.html( bytesToHR(json.size) );
+					$('#video-info-type')
+							.html(json.type);
+					$('#video-info-container')
+						.slideDown(500);
+
+					// Show video
+					$('#video-player-anchor').remove();
+					$('#video-player-container').empty();
+					$('<div/>')
+						.html('<b>source:</b> ')
+						.appendTo( $('#video-player-container') )
+						.append(
+								$('<a/>')
+									.attr('href', json.source)
+									.attr('target', '_BLANK_' + json.host)
+									.attr('rel', 'noreferrer')
+									.html(json.source)
+						);
+					return; // terrible I know.
+				}
 				else {
 					$('#status-rip-album')
 						.html('images retrieved, ripping will start momentarily')

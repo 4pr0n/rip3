@@ -73,11 +73,33 @@ def rip_album(keys):
 
 		return ripper.start()
 	except Exception, e:
-		return err(str(e), tb=format_exc())
+		e = format_exc()  # just to retain original error.	
+		try:
+			from py.VideoBase import VideoBase
+			Ripper = VideoBase.get_ripper(url)			
+			ripper = Ripper(url)
+			return ripper.rip_video()
+		except Exception, ex:
+			pass
+		return err(str(e), tb=e)
 
 def rip_video(keys):
 	if not 'url' in keys:
 		return err('url required')
+
+	from py.DB import DB
+	db = DB()
+
+	from time import gmtime
+	from calendar import timegm
+	now = timegm(gmtime())
+	values = [
+		now,  # created
+		keys['url'],        # source url		
+		environ.get('REMOTE_ADDR', '0.0.0.0'), # author
+	]
+	album_id = db.insert('videos', values)
+	db.commit()
 
 	url = keys['url']
 	try:
