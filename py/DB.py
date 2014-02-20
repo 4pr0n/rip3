@@ -117,8 +117,8 @@ SCHEMA = {
 
 	'videos' :
 		'accessed   integer,' +
-		'url        text,' +
-		'author     text',    # IP of user who ripped it
+		'author     text,' +    # IP of user who ripped it
+		'url        text',
 }
 
 '''
@@ -155,14 +155,14 @@ class DB:
 			self.conn = db = MySQLdb.connect(host="localhost", # your host, usually localhost
 	                     user="root", # your username
 	                      passwd="root", # your password
-	                      db="rip3") # name of the data base
+	                      db="rip3rarchives") # name of the data base
 			self.debug('__init__: connecting to database')
 		except:
 			self.conn = db = MySQLdb.connect(host="localhost", # your host, usually localhost
 	                     user="root", # your username
 	                      passwd="root") # your password
-			self.conn.query("create database rip3")
-			self.conn.query("use rip3")
+			self.conn.query("create database rip3rarchives")
+			self.conn.query("use rip3rarchives")
 			need_to_create = True
 			self.debug('__init__: creating database')
 
@@ -392,7 +392,7 @@ class DB:
 				set %s
 				%s
 		''' % (table, changes, where)
-		print query
+		# print query
 		cur.execute(query, values)
 		cur.close()
 
@@ -451,7 +451,7 @@ if __name__ == '__main__':
 	album_id = db.insert('videos', [11, 'http://what', 'damn'])
 	# print album_id
 	# db.commit()
-	self.db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ? accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
+	#db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ? accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
 	count = db.count('albums', 'author like %s', '127.0.0.1')
 	print count
 	print 'ok'

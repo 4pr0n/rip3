@@ -155,7 +155,7 @@ def get_album_info(keys):
 	db = DB()
 	cur = db.conn.cursor()
 	curexec = cur.execute(q, [ keys['album'] ])
-	one = curexec.fetchone()
+	one = cur.fetchone()
 	if one == None:
 		# Album does not exist
 		response = err('album not found')
@@ -215,7 +215,7 @@ def get_album_info(keys):
 			where ip = %s
 		'''
 		curexec = cur.execute(q, [author])
-		one = curexec.fetchone()
+		one = cur.fetchone()
 		if one == None:
 			response['admin']['user'] = {
 				'ip' : author,
@@ -253,17 +253,17 @@ def get_album(keys):
 		select
 			i_index, medias.url, valid, error, type, image_name, width, height, medias.filesize, thumb_name, t_width, t_height, medias.metadata, albums.path
 		from medias inner join albums on medias.album_id = albums.rowid
-		where albums.path like %s
+		where albums.path like "%s"
 		order by i_index asc
 		limit %d
 		offset %d
-	''' % (count, start)
+	''' % (keys['album'], count, start)
 	from py.DB import DB
 	db = DB()
 	cur = db.conn.cursor()
-	curexec = cur.execute(q, [ keys['album'] ])
+	cur.execute(q)
 	response = []
-	for (index, url, valid, error, filetype, name, width, height, filesize, thumb, twidth, theight, metadata, path) in curexec:
+	for (index, url, valid, error, filetype, name, width, height, filesize, thumb, twidth, theight, metadata, path) in cur:
 		if thumb == 'nothumb.png':
 			thumb = './ui/images/%s' % thumb
 		else:
