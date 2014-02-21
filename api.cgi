@@ -253,15 +253,16 @@ def get_album(keys):
 		select
 			i_index, medias.url, valid, error, type, image_name, width, height, medias.filesize, thumb_name, t_width, t_height, medias.metadata, albums.path
 		from medias inner join albums on medias.album_id = albums.rowid
-		where albums.path like "%s"
+		where albums.path like %s
+	''' + '''
 		order by i_index asc
 		limit %d
 		offset %d
-	''' % (keys['album'], count, start)
+	''' % (count, start)
 	from py.DB import DB
 	db = DB()
 	cur = db.conn.cursor()
-	cur.execute(q)
+	cur.execute(q, keys['album'])
 	response = []
 	for (index, url, valid, error, filetype, name, width, height, filesize, thumb, twidth, theight, metadata, path) in cur:
 		if thumb == 'nothumb.png':
