@@ -439,7 +439,7 @@ class DB:
 				config (`key`, `value`)
 				values (%s, %s)
 		'''
-		print query % (key,value)
+		# print query % (key,value)
 		execur = cur.execute(query, [key, value])
 		# result = execur.fetchone()
 		# self.commit()
