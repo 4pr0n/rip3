@@ -111,9 +111,10 @@ SCHEMA = {
 		'username text,' +
 		'cookie   text',
 
-	'config' :
-		'`key`   text,' +
-		'`value` text',
+	'config' : # reason for this change is MYSQL doesn't do primary key on text fields.
+		'`key`   VARCHAR(100),' + # hopefully you won't have entries large than 100 characters
+		'`value` text,' +
+		'PRIMARY KEY (`key`)',
 
 	'videos' :
 		'accessed   integer,' +
@@ -131,12 +132,12 @@ INDICES = {
 	'albums' : 'created',
 	'albums' : 'accessed',
 	'albums' : 'views',
-	'albums' : 'author',
+	# 'albums' : 'author',
 	'medias' : 'album_id',
-	'medias' : 'status',
-	'medias' : 'path',
-	'medias' : 'url',
-	'config' : 'key'
+	# 'medias' : 'status',
+	# 'medias' : 'path',
+	# 'medias' : 'url',
+	# 'config' : 'key'
 }
 
 
@@ -179,6 +180,7 @@ class DB:
 
 			for index in INDICES:
 				self.create_index(index, INDICES[index])
+				
 			# Commit
 			self.commit()
 
@@ -238,12 +240,13 @@ class DB:
 		cur = self.conn.cursor()
 		if name == None:
 			name = '%s_%s' % (index, key.replace(',', '_'))
+		# need to make sure there is no index already
 		query = '''
 			create index 
-				if not exists 
-				%s on %s(%s)
+				%s on %s(`%s`)
 		''' % (name, index, key)
-		# cur.execute(query)
+		# print query
+		cur.execute(query)
 		cur.close()
 	
 	def commit(self):
@@ -436,7 +439,7 @@ class DB:
 				config (`key`, `value`)
 				values (%s, %s)
 		'''
-		# print query % (key,value)
+		print query % (key,value)
 		execur = cur.execute(query, [key, value])
 		# result = execur.fetchone()
 		# self.commit()
@@ -444,14 +447,18 @@ class DB:
 
 if __name__ == '__main__':
 	db = DB()
+	db.create_table('config', SCHEMA['config'])
 	print 'saving "yes" to config key "test"...'
 	db.set_config('test', 'yes')
 	print 'db.get_config("test") = "%s"' % db.get_config('test')
+
+	# db.create_index('config', INDICES['config'])
+	# db.conn.cursor().execute('drop table config')
 	# db.create_table('videos', SCHEMA['videos'])
-	album_id = db.insert('videos', [11, 'http://what', 'damn'])
-	# print album_id
-	# db.commit()
-	#db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ? accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
-	count = db.count('albums', 'author like %s', '127.0.0.1')
-	print count
-	print 'ok'
+	# album_id = db.insert('videos', [11, 'http://what', 'damn'])
+	# # print album_id
+	# # db.commit()
+	# #db.update('albums', 'ready = 1, pending = 0, filesize = ?, modified = ? accessed = ?, count = ?', 'rowid = ?', [filesize, now, now, count, album_id])
+	# count = db.count('albums', 'author like %s', '127.0.0.1')
+	# print count
+	# print 'ok'
